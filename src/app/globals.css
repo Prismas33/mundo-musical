@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --orange-primary: #FFA500;
+  --blue-secondary: #00BFFF;
+  --green-accent: #ADFF2F;
+  --background: #FDF6EC;
+  --white: #FFFFFF;
+}
+
+body {
+  background-color: var(--background);
+  color: #333;
+}
+
+/* Fonte customizada para o projeto */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Nunito:wght@300;400;500;600;700&display=swap');
+
+.font-poppins {
+  font-family: 'Poppins', sans-serif;
+}
+
+.font-nunito {
+  font-family: 'Nunito', sans-serif;
+}
