@@ -6,6 +6,7 @@ import { auth } from '@/lib/firebase'
 import { useRouter } from 'next/navigation'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useEffect } from 'react'
+import Image from 'next/image'
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('')
@@ -51,8 +52,14 @@ export default function AdminLogin() {
       <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-3xl">🦕</span>
+          <div className="w-20 h-20 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
+            <Image
+              src="/images/dino&family/Dino.png"
+              alt="Dino"
+              width={60}
+              height={60}
+              className="object-contain"
+            />
           </div>
           <h1 className="text-2xl font-bold font-poppins text-gray-800 mb-2">
             Dashboard Admin
