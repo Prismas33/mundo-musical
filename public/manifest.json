@@ -1,0 +1,52 @@
+{
+  "name": "Mundo Musical",
+  "short_name": "Mundo Musical",
+  "description": "Descobre o mundo musical do Dino! Vídeos educativos e diversão para crianças.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FDF6EC",
+  "theme_color": "#FFA500",
+  "orientation": "portrait-primary",
+  "categories": ["education", "kids", "music"],
+  "lang": "pt",
+  "icons": [
+    {
+      "src": "/images/dino&family/dino_cp.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/images/dino&family/dino_cp.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Ver Vídeos",
+      "short_name": "Vídeos",
+      "description": "Aceder diretamente aos vídeos do Dino",
+      "url": "/videos",
+      "icons": [
+        {
+          "src": "/images/dino&family/dino_cp.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Dino Club",
+      "short_name": "Club",
+      "description": "Juntar-se ao Dino Club",
+      "url": "/contacto",
+      "icons": [
+        {
+          "src": "/images/dino&family/dino_cp.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ]
+}

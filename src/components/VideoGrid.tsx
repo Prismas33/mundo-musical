@@ -27,7 +27,7 @@ export default function VideoGrid({ videos, category }: VideoGridProps) {
           <div className="aspect-video">
             {video.platform === 'youtube' ? (
               <iframe
-                src={`https://www.youtube.com/embed/${video.embedId}`}
+                src={`https://www.youtube.com/embed/${video.embedId}?rel=0&modestbranding=0&showinfo=1&controls=1`}
                 title={video.title}
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

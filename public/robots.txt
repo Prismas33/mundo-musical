@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://mundomusical.com/sitemap.xml
+
+# Disallow admin areas (future)
+Disallow: /admin/
+Disallow: /api/
+
+# Allow important directories
+Allow: /images/
+Allow: /videos/
+Allow: /sobre/
+Allow: /em-breve/
+Allow: /contacto/
