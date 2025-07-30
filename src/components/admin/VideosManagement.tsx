@@ -87,20 +87,23 @@ export default function VideosManagement() {
 
   // Extract video ID from URL
   const extractVideoId = (url: string) => {
+    // Limpar a URL de espaços em branco
+    const cleanUrl = url.trim()
+    
     // YouTube formatos normais
-    if (url.includes('youtube.com/watch?v=')) {
-      return url.split('v=')[1]?.split('&')[0]
+    if (cleanUrl.includes('youtube.com/watch?v=')) {
+      return cleanUrl.split('v=')[1]?.split('&')[0]
     }
-    if (url.includes('youtu.be/')) {
-      return url.split('youtu.be/')[1]?.split('?')[0]
+    if (cleanUrl.includes('youtu.be/')) {
+      return cleanUrl.split('youtu.be/')[1]?.split('?')[0]
     }
     // YouTube Shorts
-    if (url.includes('youtube.com/shorts/')) {
-      return url.split('youtube.com/shorts/')[1]?.split('?')[0]
+    if (cleanUrl.includes('youtube.com/shorts/')) {
+      return cleanUrl.split('youtube.com/shorts/')[1]?.split('?')[0]
     }
     // Rumble
-    if (url.includes('rumble.com/')) {
-      const parts = url.split('/')
+    if (cleanUrl.includes('rumble.com/')) {
+      const parts = cleanUrl.split('/')
       // Para URLs como https://rumble.com/v123abc-titulo.html
       const lastPart = parts[parts.length - 1]
       if (lastPart.includes('-')) {
@@ -108,6 +111,10 @@ export default function VideosManagement() {
       }
       return lastPart?.split('.')[0] // Remove .html se existir
     }
+    
+    // Se não conseguir extrair, retornar a URL original (fallback)
+    // Isso pode acontecer se o usuário inserir apenas o ID
+    return cleanUrl
     // Se já é um ID limpo
     return url.trim()
   }

@@ -8,6 +8,25 @@ interface VideoGridProps {
   loading?: boolean
 }
 
+// Função para limpar videoId se ele contém URL completo
+const cleanVideoId = (videoId: string) => {
+  if (!videoId) return ''
+  
+  // Se o videoId já contém a URL completa, extrair apenas o ID
+  if (videoId.includes('youtube.com/shorts/')) {
+    return videoId.split('youtube.com/shorts/')[1]?.split('?')[0] || videoId
+  }
+  if (videoId.includes('youtube.com/watch?v=')) {
+    return videoId.split('v=')[1]?.split('&')[0] || videoId
+  }
+  if (videoId.includes('youtu.be/')) {
+    return videoId.split('youtu.be/')[1]?.split('?')[0] || videoId
+  }
+  
+  // Se não encontrar padrões conhecidos, retornar como está
+  return videoId
+}
+
 export default function VideoGrid({ videos, category, loading }: VideoGridProps) {
   const filteredVideos = category 
     ? videos.filter(video => video.category === category)
@@ -47,13 +66,17 @@ export default function VideoGrid({ videos, category, loading }: VideoGridProps)
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
       {filteredVideos.map((video) => {
+        // Limpar o videoId se necessário
+        const cleanedVideoId = cleanVideoId(video.videoId)
+        
         // Debug: Log video info para verificar se os IDs estão corretos
         console.log('Video debug:', {
           id: video.id,
           title: video.title,
           videoId: video.videoId,
+          cleanedVideoId,
           platform: video.platform,
-          embedUrl: `https://www.youtube.com/embed/${video.videoId}`
+          embedUrl: `https://www.youtube.com/embed/${cleanedVideoId}`
         })
         
         return (
@@ -63,7 +86,7 @@ export default function VideoGrid({ videos, category, loading }: VideoGridProps)
             {video.platform === 'youtube' ? (
               <iframe
                 // Usando parâmetros básicos que funcionam tanto para vídeos normais quanto Shorts
-                src={`https://www.youtube.com/embed/${video.videoId}?enablejsapi=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`}
+                src={`https://www.youtube.com/embed/${cleanedVideoId}?enablejsapi=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`}
                 title={video.title}
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
