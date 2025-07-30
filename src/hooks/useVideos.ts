@@ -18,7 +18,7 @@ export interface Video {
   isActive?: boolean
 }
 
-export function useVideos(category?: string) {
+export function useVideos(category?: string, language?: 'pt' | 'en') {
   const [videos, setVideos] = useState<Video[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -28,10 +28,11 @@ export function useVideos(category?: string) {
       setLoading(true)
       setError(null)
 
-      // Criar query base
+      // Criar query base com filtro de idioma
       let videosQuery = query(
         collection(db, 'videos'),
         where('isActive', '==', true),
+        where('language', '==', language || 'pt'), // Default para português
         orderBy('createdAt', 'desc')
       )
 
@@ -40,6 +41,7 @@ export function useVideos(category?: string) {
         videosQuery = query(
           collection(db, 'videos'),
           where('isActive', '==', true),
+          where('language', '==', language || 'pt'),
           where('category', '==', category),
           orderBy('createdAt', 'desc')
         )
@@ -65,6 +67,9 @@ export function useVideos(category?: string) {
         })
       })
 
+      // Debug: Log para verificar filtro de idioma
+      console.log(`📹 Vídeos carregados (${language || 'pt'}):`, videosData.length)
+      
       setVideos(videosData)
     } catch (err) {
       console.error('Erro ao buscar vídeos:', err)
@@ -76,12 +81,22 @@ export function useVideos(category?: string) {
 
   useEffect(() => {
     fetchVideos()
-  }, [category])
+  }, [category, language])
 
   return { videos, loading, error, refetch: fetchVideos }
 }
 
-export function useVideoCategories() {
+// Hook específico para vídeos em português (versão atual do site)
+export function usePortugueseVideos(category?: string) {
+  return useVideos(category, 'pt')
+}
+
+// Hook específico para vídeos em inglês (futura implementação)
+export function useEnglishVideos(category?: string) {
+  return useVideos(category, 'en')
+}
+
+export function useVideoCategories(language?: 'pt' | 'en') {
   const [categories, setCategories] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -89,7 +104,11 @@ export function useVideoCategories() {
     async function fetchCategories() {
       try {
         const querySnapshot = await getDocs(
-          query(collection(db, 'videos'), where('isActive', '==', true))
+          query(
+            collection(db, 'videos'), 
+            where('isActive', '==', true),
+            where('language', '==', language || 'pt')
+          )
         )
         
         const categoriesSet = new Set<string>()
@@ -109,7 +128,7 @@ export function useVideoCategories() {
     }
 
     fetchCategories()
-  }, [])
+  }, [language])
 
   return { categories, loading }
 }

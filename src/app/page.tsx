@@ -4,13 +4,13 @@ import Layout from '@/components/Layout'
 import Hero from '@/components/Hero'
 import Card from '@/components/Card'
 import VideoGrid from '@/components/VideoGrid'
-import { useVideos } from '@/hooks/useVideos'
+import { usePortugueseVideos } from '@/hooks/useVideos'
 import Image from 'next/image'
 import Link from 'next/link'
 
 export default function Home() {
-  // Buscar apenas os primeiros 3 vídeos para preview
-  const { videos, loading } = useVideos()
+  // Buscar apenas os primeiros 3 vídeos para preview, filtrados por português
+  const { videos, loading } = usePortugueseVideos()
   const previewVideos = videos.slice(0, 3)
 
   return (

@@ -9,6 +9,14 @@
 🏠 dinoworld.com → Página de seleção de idioma
 ```
 
+### **✅ IMPLEMENTAÇÃO ATUAL (Português):**
+- **Filtro por idioma**: Todos os hooks filtram automaticamente por `language: 'pt'`
+- **Coleção Firebase**: `videos` com campo `language: 'pt' | 'en'`
+- **Hooks específicos**:
+  - `usePortugueseVideos()` - Para vídeos em português (ATUAL)
+  - `useEnglishVideos()` - Para vídeos em inglês (FUTURO)
+- **Páginas**: `/videos`, `/sobre`, `/em-breve`, `/contacto` mostram apenas conteúdo PT
+
 ---
 
 ## 📋 **Fases de Implementação**
