@@ -46,14 +46,24 @@ export default function VideoGrid({ videos, category, loading }: VideoGridProps)
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      {filteredVideos.map((video) => (
+      {filteredVideos.map((video) => {
+        // Debug: Log video info para verificar se os IDs estão corretos
+        console.log('Video debug:', {
+          id: video.id,
+          title: video.title,
+          videoId: video.videoId,
+          platform: video.platform,
+          embedUrl: `https://www.youtube.com/embed/${video.videoId}`
+        })
+        
+        return (
         <div key={video.id} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:scale-105">
           {/* Video Embed */}
           <div className="aspect-video">
             {video.platform === 'youtube' ? (
               <iframe
-                // Parâmetros específicos otimizados para YouTube Shorts
-                src={`https://www.youtube.com/embed/${video.videoId}?loop=1&controls=1&rel=0&modestbranding=1&playlist=${video.videoId}&mute=0&showinfo=0`}
+                // Usando parâmetros básicos que funcionam tanto para vídeos normais quanto Shorts
+                src={`https://www.youtube.com/embed/${video.videoId}?enablejsapi=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`}
                 title={video.title}
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -117,7 +127,8 @@ export default function VideoGrid({ videos, category, loading }: VideoGridProps)
             </div>
           </div>
         </div>
-      ))}
+        )
+      })}
     </div>
   )
 }
