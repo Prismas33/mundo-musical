@@ -115,8 +115,6 @@ export default function VideosManagement() {
     // Se não conseguir extrair, retornar a URL original (fallback)
     // Isso pode acontecer se o usuário inserir apenas o ID
     return cleanUrl
-    // Se já é um ID limpo
-    return url.trim()
   }
 
   // Handle form submission
