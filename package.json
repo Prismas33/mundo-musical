@@ -5,16 +5,20 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:analyze": "ANALYZE=true next build",
     "start": "next start",
     "lint": "next lint",
+    "lint:fix": "next lint --fix",
+    "type-check": "tsc --noEmit",
     "generate-icons": "node scripts/generate-pwa-icons.js",
     "icons": "npm run generate-icons",
     "firebase:deploy": "firebase deploy --only firestore:rules",
-    "firebase:deploy:all": "firebase deploy"
+    "firebase:deploy:all": "firebase deploy",
+    "clean": "if exist .next rmdir /s /q .next && if exist out rmdir /s /q out"
   },
   "dependencies": {
     "firebase": "^12.0.0",
-    "next": "14.0.0",
+    "next": "^15.4.5",
     "react": "^18",
     "react-dom": "^18",
     "react-firebase-hooks": "^5.1.1"
