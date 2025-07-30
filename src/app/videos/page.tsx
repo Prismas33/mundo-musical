@@ -14,11 +14,19 @@ import type { Metadata } from 'next'
 
 export default function Videos() {
   const { videos, loading } = usePortugueseVideos() // Vídeos em português apenas
-  const [filter, setFilter] = useState<'all' | 'featured' | 'youtube' | 'rumble'>('all')
+  const [categoryFilter, setCategoryFilter] = useState<string>('all')
+  const [platformFilter, setPlatformFilter] = useState<'youtube' | 'rumble'>('youtube') // YouTube por padrão
   const [searchTerm, setSearchTerm] = useState('')
 
   // Filtrar vídeos ativos apenas (já filtrados por idioma PT no hook)
   const activeVideos = videos.filter(video => video.isActive !== false)
+
+  // Obter categorias únicas dos vídeos
+  const uniqueCategories = Array.from(new Set(
+    activeVideos
+      .filter(video => video.category)
+      .map(video => video.category)
+  )).sort()
 
   // Aplicar filtros
   const filteredVideos = activeVideos.filter(video => {
@@ -29,13 +37,15 @@ export default function Videos() {
       video.category?.toLowerCase().includes(searchTerm.toLowerCase())
 
     // Filtro por categoria
-    const matchesFilter = 
-      filter === 'all' ||
-      (filter === 'featured' && video.featured) ||
-      (filter === 'youtube' && video.platform === 'youtube') ||
-      (filter === 'rumble' && video.platform === 'rumble')
+    const matchesCategory = 
+      categoryFilter === 'all' ||
+      (categoryFilter === 'featured' && video.featured) ||
+      (categoryFilter === video.category)
 
-    return matchesSearch && matchesFilter
+    // Filtro por plataforma
+    const matchesPlatform = video.platform === platformFilter
+
+    return matchesSearch && matchesCategory && matchesPlatform
   })
 
   // Ordenar por: featured primeiro, depois por data
@@ -44,9 +54,6 @@ export default function Videos() {
     if (!a.featured && b.featured) return 1
     return (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)
   })
-
-  // Categorias únicas para filtros
-  const categories = ['Todos', 'Em Destaque', 'YouTube', 'Rumble']
 
   return (
     <Layout>
@@ -68,9 +75,9 @@ export default function Videos() {
 
           {/* Filtros e Pesquisa */}
           <div className="bg-white rounded-3xl shadow-lg p-6 md:p-8 mb-8">
-            <div className="flex flex-col lg:flex-row gap-6 items-center">
+            <div className="flex flex-col gap-6">
               {/* Barra de Pesquisa */}
-              <div className="flex-1 w-full">
+              <div className="w-full">
                 <div className="relative">
                   <input
                     type="text"
@@ -90,75 +97,114 @@ export default function Videos() {
                 </div>
               </div>
 
-              {/* Filtros */}
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => setFilter('all')}
-                  className={`px-4 py-2 rounded-xl font-medium transition-colors ${
-                    filter === 'all'
-                      ? 'bg-orange-500 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  Todos
-                </button>
-                <button
-                  onClick={() => setFilter('featured')}
-                  className={`px-4 py-2 rounded-xl font-medium transition-colors ${
-                    filter === 'featured'
-                      ? 'bg-orange-500 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  ⭐ Destaques
-                </button>
-                <button
-                  onClick={() => setFilter('youtube')}
-                  className={`px-4 py-2 rounded-xl font-medium transition-colors ${
-                    filter === 'youtube'
-                      ? 'bg-red-500 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  YouTube
-                </button>
-                <button
-                  onClick={() => setFilter('rumble')}
-                  className={`px-4 py-2 rounded-xl font-medium transition-colors ${
-                    filter === 'rumble'
-                      ? 'bg-green-500 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  Rumble
-                </button>
+              {/* Filtros por Categoria */}
+              <div className="flex flex-col gap-3">
+                <h3 className="text-sm font-semibold text-gray-700">Categorias:</h3>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => setCategoryFilter('all')}
+                    className={`px-4 py-2 rounded-xl font-medium transition-colors ${
+                      categoryFilter === 'all'
+                        ? 'bg-orange-500 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    Todos
+                  </button>
+                  <button
+                    onClick={() => setCategoryFilter('featured')}
+                    className={`px-4 py-2 rounded-xl font-medium transition-colors ${
+                      categoryFilter === 'featured'
+                        ? 'bg-yellow-500 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    ⭐ Destaques
+                  </button>
+                  {uniqueCategories.map((category) => category && (
+                    <button
+                      key={category}
+                      onClick={() => setCategoryFilter(category)}
+                      className={`px-4 py-2 rounded-xl font-medium transition-colors ${
+                        categoryFilter === category
+                          ? 'bg-purple-500 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {category}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* Resultados */}
-            <div className="mt-4 text-sm text-gray-600 font-nunito">
-              {loading ? (
-                'A carregar vídeos...'
-              ) : (
-                `${sortedVideos.length} vídeo${sortedVideos.length !== 1 ? 's' : ''} encontrado${sortedVideos.length !== 1 ? 's' : ''}`
-              )}
+              {/* Filtros por Plataforma */}
+              <div className="flex flex-col gap-3">
+                <h3 className="text-sm font-semibold text-gray-700">Plataforma:</h3>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => setPlatformFilter('youtube')}
+                    className={`px-4 py-2 rounded-xl font-medium transition-colors ${
+                      platformFilter === 'youtube'
+                        ? 'bg-red-500 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    📺 YouTube
+                  </button>
+                  <button
+                    onClick={() => setPlatformFilter('rumble')}
+                    className={`px-4 py-2 rounded-xl font-medium transition-colors ${
+                      platformFilter === 'rumble'
+                        ? 'bg-green-500 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    🎯 Rumble
+                  </button>
+                </div>
+              </div>
+
+              {/* Resultados */}
+              <div className="text-sm text-gray-600 font-nunito border-t pt-3 flex items-center justify-between">
+                <span>
+                  {loading ? (
+                    'A carregar vídeos...'
+                  ) : (
+                    `${sortedVideos.length} vídeo${sortedVideos.length !== 1 ? 's' : ''} encontrado${sortedVideos.length !== 1 ? 's' : ''}`
+                  )}
+                </span>
+                
+                {/* Botão para limpar filtros */}
+                {(searchTerm || categoryFilter !== 'all') && (
+                  <button
+                    onClick={() => {
+                      setSearchTerm('')
+                      setCategoryFilter('all')
+                      setPlatformFilter('youtube') // Voltar ao padrão YouTube
+                    }}
+                    className="text-xs bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded-lg transition-colors"
+                  >
+                    🗑️ Limpar filtros
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
           {/* Vídeos em Destaque */}
-          {!searchTerm && filter === 'all' && (
+          {!searchTerm && categoryFilter === 'all' && (
             <div className="mb-12">
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold font-poppins text-gray-800 mb-2">
                   ⭐ Vídeos em Destaque
                 </h2>
                 <p className="text-lg text-gray-600 font-nunito">
-                  Os vídeos favoritos do Dino!
+                  Os vídeos favoritos do Dino na plataforma {platformFilter === 'youtube' ? 'YouTube' : 'Rumble'}!
                 </p>
               </div>
               
               <VideoGrid 
-                videos={activeVideos.filter(v => v.featured).slice(0, 3)} 
+                videos={activeVideos.filter(v => v.featured && v.platform === platformFilter).slice(0, 3)} 
                 loading={loading}
               />
             </div>
@@ -166,13 +212,41 @@ export default function Videos() {
 
           {/* Grid de Vídeos */}
           <div className="mb-12">
-            {!searchTerm && filter === 'all' && (
+            {/* Mostrar título apenas quando não há filtros de categoria ou pesquisa ativa */}
+            {!searchTerm && categoryFilter === 'all' && (
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold font-poppins text-gray-800 mb-2">
-                  📺 Todos os Vídeos
+                  📺 Todos os Vídeos {platformFilter === 'youtube' ? 'YouTube' : 'Rumble'}
                 </h2>
                 <p className="text-lg text-gray-600 font-nunito">
-                  Navega por toda a coleção!
+                  Navega por toda a coleção na plataforma {platformFilter === 'youtube' ? 'YouTube' : 'Rumble'}!
+                </p>
+              </div>
+            )}
+
+            {/* Mostrar título quando há filtros ativos */}
+            {(searchTerm || categoryFilter !== 'all') && (
+              <div className="text-center mb-8">
+                <h2 className="text-2xl font-bold font-poppins text-gray-800 mb-2">
+                  🔍 Resultados da Pesquisa
+                </h2>
+                {searchTerm && (
+                  <p className="text-gray-600 font-nunito">
+                    A pesquisar por: "<span className="font-semibold">{searchTerm}</span>"
+                  </p>
+                )}
+                {categoryFilter !== 'all' && categoryFilter !== 'featured' && (
+                  <p className="text-gray-600 font-nunito">
+                    Categoria: <span className="font-semibold">{categoryFilter}</span>
+                  </p>
+                )}
+                {categoryFilter === 'featured' && (
+                  <p className="text-gray-600 font-nunito">
+                    A mostrar apenas <span className="font-semibold">vídeos em destaque</span>
+                  </p>
+                )}
+                <p className="text-sm text-gray-500">
+                  Plataforma: {platformFilter === 'youtube' ? 'YouTube' : 'Rumble'}
                 </p>
               </div>
             )}

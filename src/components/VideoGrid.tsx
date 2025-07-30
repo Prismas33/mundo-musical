@@ -52,10 +52,11 @@ export default function VideoGrid({ videos, category, loading }: VideoGridProps)
           <div className="aspect-video">
             {video.platform === 'youtube' ? (
               <iframe
-                src={`https://www.youtube.com/embed/${video.videoId}?rel=0&modestbranding=0&showinfo=1&controls=1`}
+                // Parâmetros específicos otimizados para YouTube Shorts
+                src={`https://www.youtube.com/embed/${video.videoId}?loop=1&controls=1&rel=0&modestbranding=1&playlist=${video.videoId}&mute=0&showinfo=0`}
                 title={video.title}
                 frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
                 className="w-full h-full"
               ></iframe>
@@ -72,31 +73,48 @@ export default function VideoGrid({ videos, category, loading }: VideoGridProps)
           
           {/* Video Info */}
           <div className="p-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
+            <div className="flex items-center justify-between mb-3">
+              <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
                 video.platform === 'youtube' 
                   ? 'bg-red-100 text-red-800' 
                   : 'bg-green-100 text-green-800'
               }`}>
-                {video.platform === 'youtube' ? 'YouTube' : 'Rumble'}
+                {video.platform === 'youtube' ? '📺 YouTube' : '🎯 Rumble'}
               </span>
+              
+              {video.featured && (
+                <span className="inline-flex items-center px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full font-medium">
+                  ⭐ Destaque
+                </span>
+              )}
             </div>
             
-            <h3 className="text-lg font-bold font-poppins text-gray-800 mb-2">
+            <h3 className="text-lg font-bold font-poppins text-gray-800 mb-2 line-clamp-2">
               {video.title}
             </h3>
             
-            <p className="text-gray-600 font-nunito text-sm line-clamp-3">
+            <p className="text-gray-600 font-nunito text-sm line-clamp-3 mb-3">
               {video.description}
             </p>
             
-            {video.category && (
-              <div className="mt-3">
-                <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                  {video.category}
+            {/* Tags de Categoria e Data */}
+            <div className="flex items-center justify-between">
+              {video.category && (
+                <span className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 text-sm rounded-full font-medium">
+                  🏷️ {video.category}
                 </span>
-              </div>
-            )}
+              )}
+              
+              {video.createdAt && (
+                <span className="text-xs text-gray-500">
+                  {new Date(video.createdAt.seconds * 1000).toLocaleDateString('pt-PT', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                  })}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       ))}

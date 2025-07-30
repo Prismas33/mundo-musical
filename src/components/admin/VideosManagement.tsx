@@ -31,6 +31,7 @@ export default function VideosManagement() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string>('')
   const [errorMessage, setErrorMessage] = useState<string>('')
+  const [languageFilter, setLanguageFilter] = useState<'pt' | 'en'>('pt') // Filtro de idioma
   
   // Form state
   const [formData, setFormData] = useState({
@@ -47,6 +48,9 @@ export default function VideosManagement() {
 
   // Load categories for dropdown
   const { categories, loading: categoriesLoading } = useCategories(formData.language)
+
+  // Filtrar vídeos por idioma
+  const filteredVideos = videos.filter(video => video.language === languageFilter)
 
   // Load videos from Firestore
   const loadVideos = async () => {
@@ -83,17 +87,29 @@ export default function VideosManagement() {
 
   // Extract video ID from URL
   const extractVideoId = (url: string) => {
+    // YouTube formatos normais
     if (url.includes('youtube.com/watch?v=')) {
       return url.split('v=')[1]?.split('&')[0]
     }
     if (url.includes('youtu.be/')) {
       return url.split('youtu.be/')[1]?.split('?')[0]
     }
+    // YouTube Shorts
+    if (url.includes('youtube.com/shorts/')) {
+      return url.split('youtube.com/shorts/')[1]?.split('?')[0]
+    }
+    // Rumble
     if (url.includes('rumble.com/')) {
       const parts = url.split('/')
-      return parts[parts.length - 1]?.split('-')[0]
+      // Para URLs como https://rumble.com/v123abc-titulo.html
+      const lastPart = parts[parts.length - 1]
+      if (lastPart.includes('-')) {
+        return lastPart.split('-')[0]
+      }
+      return lastPart?.split('.')[0] // Remove .html se existir
     }
-    return url // Assume it's already an ID
+    // Se já é um ID limpo
+    return url.trim()
   }
 
   // Handle form submission
@@ -159,7 +175,7 @@ export default function VideosManagement() {
       videoId: '',
       duration: '',
       category: '',
-      language: 'pt',
+      language: languageFilter, // Usar o idioma do filtro ativo
       featured: false,
       isActive: true
     })
@@ -178,7 +194,7 @@ export default function VideosManagement() {
       videoId: '',
       duration: '',
       category: '',
-      language: 'pt',
+      language: languageFilter, // Usar o idioma do filtro ativo
       featured: false,
       isActive: true
     })
@@ -272,21 +288,47 @@ export default function VideosManagement() {
           </p>
         </div>
         
-        <button
-          onClick={() => {
-            setShowAddForm(true)
-            setEditingVideo(null)
-            setSuccessMessage('')
-            setErrorMessage('')
-            resetFormData()
-          }}
-          className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center"
-        >
-          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Adicionar Vídeo
-        </button>
+        <div className="flex items-center gap-4">
+          {/* Filtro de Idioma */}
+          <div className="flex items-center bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setLanguageFilter('pt')}
+              className={`px-4 py-2 rounded-md font-medium transition-colors text-sm ${
+                languageFilter === 'pt'
+                  ? 'bg-blue-500 text-white'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              🇵🇹 PT
+            </button>
+            <button
+              onClick={() => setLanguageFilter('en')}
+              className={`px-4 py-2 rounded-md font-medium transition-colors text-sm ${
+                languageFilter === 'en'
+                  ? 'bg-blue-500 text-white'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              🇬🇧 EN
+            </button>
+          </div>
+          
+          <button
+            onClick={() => {
+              setShowAddForm(true)
+              setEditingVideo(null)
+              setSuccessMessage('')
+              setErrorMessage('')
+              resetFormData()
+            }}
+            className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center"
+          >
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Adicionar Vídeo
+          </button>
+        </div>
       </div>
 
       {/* Success/Error Messages */}
@@ -498,9 +540,16 @@ export default function VideosManagement() {
       {/* Videos List */}
       <div className="bg-white rounded-xl shadow-sm border">
         <div className="p-6 border-b border-gray-200">
-          <h2 className="text-lg font-bold font-poppins text-gray-900">
-            Vídeos ({videos.length})
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold font-poppins text-gray-900">
+              Vídeos {languageFilter === 'pt' ? '🇵🇹 PT' : '🇬🇧 EN'} ({filteredVideos.length})
+            </h2>
+            {videos.length > 0 && filteredVideos.length !== videos.length && (
+              <span className="text-sm text-gray-500">
+                {videos.length - filteredVideos.length} vídeo{videos.length - filteredVideos.length !== 1 ? 's' : ''} em {languageFilter === 'pt' ? 'inglês' : 'português'}
+              </span>
+            )}
+          </div>
         </div>
         
         {loadingVideos ? (
@@ -508,17 +557,22 @@ export default function VideosManagement() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
             <p className="text-gray-500 mt-2">A carregar vídeos...</p>
           </div>
-        ) : videos.length === 0 ? (
+        ) : filteredVideos.length === 0 ? (
           <div className="p-8 text-center text-gray-500">
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-2xl">🎥</span>
             </div>
             <p className="text-lg font-medium mb-2">Nenhum vídeo encontrado</p>
-            <p className="text-sm">Adicione o primeiro vídeo para começar!</p>
+            <p className="text-sm">
+              {languageFilter === 'pt' 
+                ? 'Nenhum vídeo em português encontrado. Adicione o primeiro vídeo para começar!' 
+                : 'Nenhum vídeo em inglês encontrado. Adicione o primeiro vídeo para começar!'
+              }
+            </p>
           </div>
         ) : (
           <div className="divide-y divide-gray-200">
-            {videos.map((video) => (
+            {filteredVideos.map((video) => (
               <div key={video.id} className="p-6 hover:bg-gray-50 transition-colors">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -550,11 +604,7 @@ export default function VideosManagement() {
                       )}
                     </div>
                     
-                    <p className="text-gray-600 text-sm mb-3 leading-relaxed">
-                      {video.description}
-                    </p>
-                    
-                    <div className="flex items-center text-xs text-gray-500 space-x-4">
+                    <div className="flex items-center text-xs text-gray-500 space-x-4 mt-3">
                       <span className="flex items-center">
                         <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-6 6H2" />

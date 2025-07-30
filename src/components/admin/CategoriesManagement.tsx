@@ -36,6 +36,16 @@ export default function CategoriesManagement() {
     try {
       setLoading(true)
       
+      // Buscar categorias criadas explicitamente no Firebase
+      const categoriesQuery = query(collection(db, 'categories'), orderBy('createdAt', 'desc'))
+      const categoriesSnapshot = await getDocs(categoriesQuery)
+      
+      const explicitCategories: Category[] = categoriesSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        videoCount: 0 // Will be updated below
+      } as Category))
+
       // Buscar categorias únicas dos vídeos agrupadas por idioma
       const videosQuery = query(collection(db, 'videos'))
       const videosSnapshot = await getDocs(videosQuery)
@@ -51,20 +61,51 @@ export default function CategoriesManagement() {
         }
       })
 
-      // Converter para array de categorias
-      const categoriesData: Category[] = Array.from(categoryMap.entries()).map(([key, data], index) => {
+      // Converter categorias dos vídeos para array
+      const videoCategories: Category[] = Array.from(categoryMap.entries()).map(([key, data], index) => {
         const categoryName = key.replace(/_pt$|_en$/, '')
         return {
-          id: `cat_${index}`,
+          id: `video_cat_${index}`,
           name: categoryName,
           emoji: getCategoryEmoji(categoryName),
-          description: `Categoria com ${data.count} vídeo${data.count === 1 ? '' : 's'}`,
+          description: `Categoria extraída dos vídeos (${data.count} vídeo${data.count === 1 ? '' : 's'})`,
           language: data.language,
-          videoCount: data.count
+          videoCount: data.count,
+          createdAt: new Date()
         }
       })
 
-      setCategories(categoriesData)
+      // Atualizar contagens dos vídeos nas categorias explícitas
+      explicitCategories.forEach(category => {
+        const key = `${category.name}_${category.language}`
+        const videoData = categoryMap.get(key)
+        if (videoData) {
+          category.videoCount = videoData.count
+          category.description = `${category.description} (${videoData.count} vídeo${videoData.count === 1 ? '' : 's'})`
+        }
+      })
+
+      // Combinar e remover duplicatas (priorizar categorias explícitas)
+      const allCategories = [...explicitCategories]
+      
+      videoCategories.forEach(videoCategory => {
+        const exists = explicitCategories.some(explicit => 
+          explicit.name.toLowerCase() === videoCategory.name.toLowerCase() && 
+          explicit.language === videoCategory.language
+        )
+        if (!exists) {
+          allCategories.push(videoCategory)
+        }
+      })
+
+      // Ordenar por data de criação (mais recentes primeiro)
+      allCategories.sort((a, b) => {
+        const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt)
+        const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt)
+        return dateB.getTime() - dateA.getTime()
+      })
+
+      setCategories(allCategories)
     } catch (error) {
       console.error('Erro ao carregar categorias:', error)
       setErrorMessage('Erro ao carregar categorias')
@@ -76,16 +117,37 @@ export default function CategoriesManagement() {
   const getCategoryEmoji = (categoryName: string): string => {
     const emojiMap: { [key: string]: string } = {
       'musical': '🎵',
+      'musica': '🎵',
+      'música': '🎵',
+      'song': '🎵',
+      'music': '🎵',
       'educacional': '📚',
+      'educational': '📚',
+      'ensino': '📚',
+      'aprender': '📚',
+      'learn': '📚',
       'entretenimento': '🎬',
+      'entertainment': '🎬',
+      'diversão': '🎉',
+      'fun': '🎉',
       'infantil': '👶',
+      'criança': '👶',
+      'child': '👶',
+      'kids': '👶',
       'tutorial': '🎓',
       'aventura': '🚀',
+      'adventure': '🚀',
       'família': '👨‍👩‍👧‍👦',
-      'diversão': '🎉',
+      'family': '👨‍👩‍👧‍👦',
       'aprendizagem': '🧠',
+      'learning': '🧠',
       'criatividade': '🎨',
-      'default': '📂'
+      'creativity': '🎨',
+      'arte': '🎨',
+      'art': '🎨',
+      'completo': '🎵',
+      'complete': '🎵',
+      'default': '🏷️'
     }
 
     const lowerName = categoryName.toLowerCase()
@@ -115,12 +177,41 @@ export default function CategoriesManagement() {
     }
 
     try {
-      setSuccessMessage(`🎉 Nova categoria "${formData.name}" criada para ${formData.language === 'pt' ? '🇵🇹 Português' : '🇬🇧 English'}! Adicione vídeos com esta categoria para que apareça na lista.`)
       setErrorMessage('')
+      
+      // Criar categoria no Firebase
+      const categoryData = {
+        name: formData.name.trim(),
+        emoji: formData.emoji.trim() || getCategoryEmoji(formData.name),
+        description: formData.description || `Categoria ${formData.name}`,
+        language: formData.language,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        isActive: true
+      }
+
+      const docRef = await addDoc(collection(db, 'categories'), categoryData)
+      console.log('Categoria criada com ID:', docRef.id)
+
+      setSuccessMessage(`🎉 Categoria "${formData.name}" criada com sucesso para ${formData.language === 'pt' ? '🇵🇹 Português' : '🇬🇧 English'}!`)
+      
+      // Recarregar categorias para mostrar a nova
+      await fetchCategories()
       resetForm()
+      
+      // Auto-hide success message after 4 seconds
+      setTimeout(() => {
+        setSuccessMessage('')
+      }, 4000)
+      
     } catch (error) {
       console.error('Erro ao adicionar categoria:', error)
-      setErrorMessage('Erro ao adicionar categoria')
+      setErrorMessage('❌ Erro ao salvar categoria no Firebase. Tente novamente.')
+      
+      // Auto-hide error message after 5 seconds
+      setTimeout(() => {
+        setErrorMessage('')
+      }, 5000)
     }
   }
 
@@ -128,6 +219,89 @@ export default function CategoriesManagement() {
     setFormData({ name: '', emoji: '', description: '', language: 'pt' })
     setShowAddForm(false)
     setEditingCategory(null)
+  }
+
+  const handleEdit = (category: Category) => {
+    setEditingCategory(category)
+    setFormData({
+      name: category.name,
+      emoji: category.emoji,
+      description: category.description || '',
+      language: category.language
+    })
+    setShowAddForm(true)
+  }
+
+  const handleDelete = async (categoryId: string, categoryName: string) => {
+    if (!confirm(`Tem a certeza que quer eliminar a categoria "${categoryName}"?\n\nNota: Os vídeos não serão eliminados, apenas a categoria.`)) {
+      return
+    }
+
+    try {
+      await deleteDoc(doc(db, 'categories', categoryId))
+      setSuccessMessage(`🗑️ Categoria "${categoryName}" eliminada com sucesso!`)
+      
+      // Recarregar categorias
+      await fetchCategories()
+      
+      // Auto-hide success message after 3 seconds
+      setTimeout(() => {
+        setSuccessMessage('')
+      }, 3000)
+      
+    } catch (error) {
+      console.error('Erro ao eliminar categoria:', error)
+      setErrorMessage('❌ Erro ao eliminar categoria. Tente novamente.')
+      
+      // Auto-hide error message after 5 seconds
+      setTimeout(() => {
+        setErrorMessage('')
+      }, 5000)
+    }
+  }
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!editingCategory || !formData.name.trim()) {
+      setErrorMessage('Nome da categoria é obrigatório')
+      return
+    }
+
+    try {
+      setErrorMessage('')
+      
+      const categoryData = {
+        name: formData.name.trim(),
+        emoji: formData.emoji.trim() || getCategoryEmoji(formData.name),
+        description: formData.description || `Categoria ${formData.name}`,
+        language: formData.language,
+        updatedAt: new Date()
+      }
+
+      await updateDoc(doc(db, 'categories', editingCategory.id), categoryData)
+      console.log('Categoria atualizada:', editingCategory.id)
+
+      setSuccessMessage(`✅ Categoria "${formData.name}" atualizada com sucesso!`)
+      
+      // Recarregar categorias para mostrar as alterações
+      await fetchCategories()
+      resetForm()
+      
+      // Auto-hide success message after 4 seconds
+      setTimeout(() => {
+        setSuccessMessage('')
+      }, 4000)
+      
+    } catch (error) {
+      console.error('Erro ao atualizar categoria:', error)
+      setErrorMessage('❌ Erro ao atualizar categoria no Firebase. Tente novamente.')
+      
+      // Auto-hide error message after 5 seconds
+      setTimeout(() => {
+        setErrorMessage('')
+      }, 5000)
+    }
   }
 
   if (loading) {
@@ -211,7 +385,7 @@ export default function CategoriesManagement() {
             </button>
           </div>
 
-          <form onSubmit={handleAddCategory} className="space-y-4">
+          <form onSubmit={editingCategory ? handleUpdate : handleAddCategory} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -322,10 +496,35 @@ export default function CategoriesManagement() {
                     </div>
                   </div>
                   
-                  <div className="text-right">
+                  <div className="flex items-center space-x-4">
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
                       {category.videoCount} vídeo{category.videoCount === 1 ? '' : 's'}
                     </span>
+                    
+                    {/* Só mostrar botões de edição/eliminação para categorias criadas explicitamente */}
+                    {!category.id.startsWith('video_cat_') && (
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleEdit(category)}
+                          className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded-lg transition-colors"
+                          title="Editar categoria"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                        
+                        <button
+                          onClick={() => handleDelete(category.id, category.name)}
+                          className="p-2 text-red-600 hover:text-red-800 hover:bg-red-100 rounded-lg transition-colors"
+                          title="Eliminar categoria"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
