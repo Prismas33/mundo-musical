@@ -4,7 +4,7 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Sobre o Dino - Mundo Musical',
-  description: 'Conhece a história do Mundo Musical e a nossa missão de educar e entreter crianças através da música.',
+  description: 'Conheça a história do Mundo Musical e nossa missão de educar e entreter crianças através da música.',
 }
 
 export default function Sobre() {
@@ -25,27 +25,24 @@ export default function Sobre() {
               A História do Dino
             </h1>
             <p className="text-xl text-gray-600 font-nunito">
-              Descobre como tudo começou e qual é a nossa missão
+              Descubra como tudo começou e qual é a nossa missão
             </p>
           </div>
 
           {/* História */}
           <div className="bg-white rounded-3xl shadow-lg p-8 md:p-12 mb-12">
             <h2 className="text-3xl font-bold font-poppins text-gray-800 mb-6 text-center">
-              🌟 Como tudo começou
+              🌟 Como Tudo Começou
             </h2>
             <div className="prose prose-lg max-w-none font-nunito text-gray-600">
               <p className="mb-6">
-                Era uma vez um dinossauro muito especial chamado Dino, que vivia num mundo colorido e cheio de música. 
-                Ao contrário dos outros dinossauros que rugiam, o Dino preferia cantar e fazer música!
+                Era uma vez um dinossauro muito especial chamado Dino, que vivia em um mundo colorido, cheio de sons, melodias e sorrisos. Mas o Dino era diferente. Enquanto os outros dinossauros rugiam, ele cantava.
               </p>
               <p className="mb-6">
-                O Dino descobriu que através da música podia ensinar coisas incríveis às crianças: 
-                desde as cores do arco-íris até aos números, desde as letras do alfabeto até aos valores mais importantes da vida.
+                Desde pequeno, o Dino descobriu que a música tinha um poder mágico. Ensinava, aproximava, encantava. Cada nota era uma oportunidade de mostrar que aprender pode ser tão divertido quanto brincar. Foi assim que nasceu sua missão: usar a música para ensinar crianças de forma leve, criativa e inesquecível.
               </p>
               <p className="mb-6">
-                Assim nasceu o <strong>Mundo Musical</strong> - um lugar mágico onde a aprendizagem e a diversão andam de mãos dadas, 
-                onde cada música é uma aventura e cada vídeo é uma nova descoberta!
+                Ao lado do Dino está sempre sua família. A vovó carinhosa, os primos curiosos, o tio cozinheiro e muitos outros personagens. Juntos, eles vivem aventuras incríveis e ajudam a transformar cada história em um momento cheio de aprendizado e afeto.
               </p>
             </div>
           </div>
@@ -54,7 +51,7 @@ export default function Sobre() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
             <div className="bg-orange-100 rounded-2xl p-8">
               <h3 className="text-2xl font-bold font-poppins text-orange-800 mb-4 flex items-center">
-                🎯 A Nossa Missão
+                🎯 Nossa Missão
               </h3>
               <p className="text-orange-700 font-nunito">
                 Criar conteúdo educativo de qualidade que inspire, eduque e divirta crianças de todas as idades. 
@@ -64,11 +61,11 @@ export default function Sobre() {
 
             <div className="bg-blue-100 rounded-2xl p-8">
               <h3 className="text-2xl font-bold font-poppins text-blue-800 mb-4 flex items-center">
-                💝 Os Nossos Valores
+                💝 Nossos Valores
               </h3>
               <p className="text-blue-700 font-nunito">
                 Criatividade, diversão, aprendizagem e família. Cada vídeo é criado com amor e pensado para ser 
-                partilhado entre pais e filhos, criando momentos especiais em família.
+                compartilhado entre pais e filhos, criando momentos especiais em família.
               </p>
             </div>
           </div>
@@ -76,7 +73,7 @@ export default function Sobre() {
           {/* O que oferecemos */}
           <div className="bg-green-50 rounded-3xl p-8 md:p-12 mb-12">
             <h2 className="text-3xl font-bold font-poppins text-gray-800 mb-8 text-center">
-              🎁 O que o Dino tem para ti
+              🎁 O que o Dino oferece para você
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="flex items-start space-x-4">
@@ -104,7 +101,7 @@ export default function Sobre() {
                 <div>
                   <h4 className="font-bold text-gray-800 mb-2">Momentos em Família</h4>
                   <p className="text-gray-600 font-nunito">
-                    Conteúdo pensado para ser partilhado com os pais.
+                    Conteúdo pensado para ser compartilhado com os pais.
                   </p>
                 </div>
               </div>
@@ -124,23 +121,23 @@ export default function Sobre() {
           {/* Call to Action */}
           <div className="text-center bg-white rounded-2xl p-8 shadow-lg">
             <h3 className="text-2xl font-bold font-poppins text-gray-800 mb-4">
-              Quer fazer parte da família Dino? 🦕
+              Quer fazer parte da família do Dino? 🦕
             </h3>
             <p className="text-gray-600 font-nunito mb-6">
-              Junta-te ao Dino Club e fica a par de todas as novidades, atividades exclusivas e surpresas especiais!
+              Junte-se ao Dino Club e fique por dentro de todas as novidades, atividades exclusivas e surpresas especiais!
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
                 href="/videos"
                 className="bg-orange-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-orange-600 transition-colors"
               >
-                Ver os Vídeos
+                Assistir aos Vídeos
               </a>
               <a
                 href="/contacto"
                 className="bg-blue-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-600 transition-colors"
               >
-                Juntar ao Dino Club
+                Entrar no Dino Club
               </a>
             </div>
           </div>

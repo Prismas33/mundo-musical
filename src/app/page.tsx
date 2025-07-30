@@ -23,10 +23,10 @@ export default function Home() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold font-poppins text-gray-800 mb-4">
-              O que podes encontrar no mundo do Dino
+              O que você pode encontrar no mundo do Dino
             </h2>
             <p className="text-xl text-gray-600 font-nunito max-w-3xl mx-auto">
-              Descobre todas as aventuras, aprendizagens e diversão que o Dino tem para ti!
+              Descubra todas as aventuras, aprendizagens e diversão que o Dino tem para você!
             </p>
           </div>
           
@@ -34,7 +34,7 @@ export default function Home() {
             <Card
               emoji="🎬"
               title="Vídeos Educativos"
-              description="Explora a nossa coleção de vídeos musicais educativos. Aprende enquanto te diverte com o Dino!"
+              description="Explore nossa coleção de vídeos musicais educativos. Aprenda enquanto se diverte com o Dino!"
               status="available"
               link="/videos"
               action="Ver Vídeos"
@@ -43,7 +43,7 @@ export default function Home() {
             <Card
               emoji="🎨"
               title="Livros para Colorir"
-              description="Em breve terás acesso a livros para colorir digitais e para imprimir com o Dino e os seus amigos!"
+              description="Em breve você terá acesso a livros para colorir digitais e para imprimir com o Dino e seus amigos!"
               status="coming-soon"
               link="/em-breve"
               action="Ver Mais"
@@ -52,7 +52,7 @@ export default function Home() {
             <Card
               emoji="📱"
               title="App Dino TV"
-              description="A aplicação móvel está a caminho! Vai ter jogos, vídeos e atividades interativas para toda a família."
+              description="O aplicativo móvel está chegando! Vai ter jogos, vídeos e atividades interativas para toda a família."
               status="in-development"
               link="/em-breve"
               action="Saber Mais"
@@ -60,8 +60,8 @@ export default function Home() {
             
             <Card
               emoji="🧸"
-              title="Peluches e Brinquedos"
-              description="Vai poder abraçar o Dino! Peluches macios e brinquedos educativos estão a ser preparados."
+              title="Pelúcias e Brinquedos"
+              description="Você poderá abraçar o Dino! Pelúcias macias e brinquedos educativos estão sendo preparados."
               status="coming-soon"
               link="/em-breve"
               action="Ver Mais"
@@ -69,8 +69,8 @@ export default function Home() {
             
             <Card
               emoji="🎵"
-              title="Música e Karaoke"
-              description="Canta as músicas favoritas do Dino! Sistema de karaoke interativo para crianças."
+              title="Música e Karaokê"
+              description="Cante as músicas favoritas do Dino! Sistema de karaokê interativo para crianças."
               status="in-development"
               link="/em-breve"
               action="Em Breve"
@@ -79,10 +79,10 @@ export default function Home() {
             <Card
               emoji="👥"
               title="Dino Club"
-              description="Junta-te à comunidade oficial! Recebe novidades, atividades exclusivas e surpresas especiais."
+              description="Junte-se à comunidade oficial! Receba novidades, atividades exclusivas e surpresas especiais."
               status="available"
               link="/contacto"
-              action="Juntar-me"
+              action="Participar"
             />
           </div>
         </div>
@@ -94,11 +94,11 @@ export default function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-3xl md:text-4xl font-bold font-poppins text-gray-800 mb-6">
-                Conhece o nosso amigo Dino! 🦕
+                Conheça nosso amigo Dino! 🦕
               </h2>
               <p className="text-lg text-gray-600 font-nunito mb-6">
                 O Dino é um dinossauro muito especial que adora música, aprender coisas novas e fazer novos amigos. 
-                Ele criou este mundo mágico para partilhar a sua paixão pela música e educação com todas as crianças!
+                Ele criou este mundo mágico para compartilhar sua paixão pela música e educação com todas as crianças!
               </p>
               <p className="text-lg text-gray-600 font-nunito mb-8">
                 Cada vídeo é uma nova aventura repleta de cores, sons e aprendizagem. 
@@ -115,7 +115,7 @@ export default function Home() {
                   href="/videos"
                   className="bg-blue-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-600 transition-colors text-center"
                 >
-                  Ver os Vídeos
+                  Assistir aos Vídeos
                 </a>
               </div>
             </div>
@@ -133,7 +133,7 @@ export default function Home() {
                   Olá, eu sou o Dino!
                 </h3>
                 <p className="text-gray-600 font-nunito">
-                  Vem descobrir o meu mundo musical! 🎵
+                  Venha descobrir meu mundo musical! 🎵
                 </p>
               </div>
             </div>
@@ -149,7 +149,7 @@ export default function Home() {
               🎬 Últimos Vídeos do Dino
             </h2>
             <p className="text-xl text-gray-600 font-nunito max-w-3xl mx-auto mb-8">
-              Vê os vídeos mais recentes e divertidos! Cada vídeo é uma nova aventura de aprendizagem.
+              Veja os vídeos mais recentes e divertidos! Cada vídeo é uma nova aventura de aprendizagem.
             </p>
           </div>
           
