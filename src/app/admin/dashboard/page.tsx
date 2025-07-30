@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRequireAuth } from '@/hooks/useAuth'
 import { signOut } from 'firebase/auth'
-import { auth } from '@/lib/firebase'
+import { auth, db } from '@/lib/firebase'
+import { collection, getDocs, query, orderBy } from 'firebase/firestore'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import VideosManagement from '@/components/admin/VideosManagement'
@@ -88,76 +89,154 @@ export default function AdminDashboard() {
   }
 
   // Componente do Dashboard Home
-  const DashboardHome = () => (
-    <div className="space-y-8">
-      {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-orange-500 to-blue-500 rounded-2xl p-8 text-white">
-        <h2 className="text-3xl font-bold font-poppins mb-2">
-          Bem-vindo ao Dashboard! 🎉
-        </h2>
-        <p className="text-orange-100 font-nunito">
-          Gere o conteúdo do Mundo Musical de forma simples e eficaz.
-        </p>
-      </div>
+  const DashboardHome = () => {
+    const [dashboardStats, setDashboardStats] = useState({
+      totalVideos: 0,
+      categorias: 0,
+      publicados: 0,
+      loading: true
+    })
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    useEffect(() => {
+      const fetchDashboardData = async () => {
+        try {
+          // Buscar vídeos
+          const videosQuery = query(collection(db, 'videos'), orderBy('createdAt', 'desc'))
+          const videosSnapshot = await getDocs(videosQuery)
+          
+          const videos = videosSnapshot.docs.map((doc: any) => doc.data())
+          const totalVideos = videos.length
+          const publicados = videos.filter((v: any) => v.isActive !== false).length
+          
+          // Contar categorias únicas
+          const categories = new Set(videos.map((v: any) => v.category).filter(Boolean))
+          const categorias = categories.size
+
+          setDashboardStats({
+            totalVideos,
+            categorias,
+            publicados,
+            loading: false
+          })
+        } catch (error) {
+          console.error('Erro ao carregar estatísticas:', error)
+          setDashboardStats(prev => ({ ...prev, loading: false }))
+        }
+      }
+
+      fetchDashboardData()
+    }, [])
+
+    return (
+      <div className="space-y-8">
+        {/* Welcome Section */}
+        <div className="bg-gradient-to-r from-orange-500 to-blue-500 rounded-2xl p-8 text-white">
+          <h2 className="text-3xl font-bold font-poppins mb-2">
+            Bem-vindo ao Dashboard! 🎉
+          </h2>
+          <p className="text-orange-100 font-nunito">
+            Gere o conteúdo do Mundo Musical de forma simples e eficaz.
+          </p>
+        </div>
+
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-white rounded-xl p-6 shadow-sm">
+            <div className="flex items-center">
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <span className="text-2xl">🎥</span>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Vídeos</p>
+                {dashboardStats.loading ? (
+                  <div className="animate-pulse bg-gray-200 h-8 w-12 rounded"></div>
+                ) : (
+                  <p className="text-2xl font-bold text-gray-900">{dashboardStats.totalVideos}</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl p-6 shadow-sm">
+            <div className="flex items-center">
+              <div className="p-3 bg-green-100 rounded-lg">
+                <span className="text-2xl">📊</span>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Categorias</p>
+                {dashboardStats.loading ? (
+                  <div className="animate-pulse bg-gray-200 h-8 w-12 rounded"></div>
+                ) : (
+                  <p className="text-2xl font-bold text-gray-900">{dashboardStats.categorias}</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl p-6 shadow-sm">
+            <div className="flex items-center">
+              <div className="p-3 bg-orange-100 rounded-lg">
+                <span className="text-2xl">👁️</span>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Publicados</p>
+                {dashboardStats.loading ? (
+                  <div className="animate-pulse bg-gray-200 h-8 w-12 rounded"></div>
+                ) : (
+                  <p className="text-2xl font-bold text-gray-900">{dashboardStats.publicados}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Recent Activity */}
         <div className="bg-white rounded-xl p-6 shadow-sm">
-          <div className="flex items-center">
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <span className="text-2xl">🎥</span>
+          <h3 className="text-lg font-bold font-poppins text-gray-900 mb-4">
+            Atividade Recente
+          </h3>
+          <div className="space-y-3">
+            <div className="flex items-center py-2">
+              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                <span className="text-green-600 text-sm">✓</span>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-900">Dashboard com dados reais implementado</p>
+                <p className="text-xs text-gray-500">Sistema conectado ao Firebase</p>
+              </div>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Vídeos</p>
-              <p className="text-2xl font-bold text-gray-900">6</p>
+            <div className="flex items-center py-2">
+              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                <span className="text-blue-600 text-sm">📊</span>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-900">Analytics implementado</p>
+                <p className="text-xs text-gray-500">Estatísticas reais do Firebase</p>
+              </div>
             </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl p-6 shadow-sm">
-          <div className="flex items-center">
-            <div className="p-3 bg-green-100 rounded-lg">
-              <span className="text-2xl">📊</span>
+            <div className="flex items-center py-2">
+              <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center mr-3">
+                <span className="text-orange-600 text-sm">🏷️</span>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-900">Gestão de categorias ativa</p>
+                <p className="text-xs text-gray-500">Categorias extraídas automaticamente</p>
+              </div>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Categorias</p>
-              <p className="text-2xl font-bold text-gray-900">5</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl p-6 shadow-sm">
-          <div className="flex items-center">
-            <div className="p-3 bg-orange-100 rounded-lg">
-              <span className="text-2xl">👁️</span>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Publicados</p>
-              <p className="text-2xl font-bold text-gray-900">6</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Activity */}
-      <div className="bg-white rounded-xl p-6 shadow-sm">
-        <h3 className="text-lg font-bold font-poppins text-gray-900 mb-4">
-          Atividade Recente
-        </h3>
-        <div className="space-y-3">
-          <div className="flex items-center py-2">
-            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
-              <span className="text-green-600 text-sm">✓</span>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-900">Sistema inicializado</p>
-              <p className="text-xs text-gray-500">Dashboard admin criado com sucesso</p>
+            <div className="flex items-center py-2">
+              <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                <span className="text-purple-600 text-sm">⚙️</span>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-900">Configurações do site funcionais</p>
+                <p className="text-xs text-gray-500">SEO, redes sociais e manutenção</p>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  )
+    )
+  }
 
   // Função para renderizar o conteúdo baseado na página atual
   const renderContent = () => {

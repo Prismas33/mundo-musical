@@ -5,6 +5,7 @@ import { db } from '@/lib/firebase'
 import { collection, getDocs, addDoc, deleteDoc, doc, updateDoc } from 'firebase/firestore'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { auth } from '@/lib/firebase'
+import { useCategories } from '@/hooks/useCategories'
 
 interface Video {
   id: string
@@ -43,6 +44,9 @@ export default function VideosManagement() {
     featured: false,
     isActive: true
   })
+
+  // Load categories for dropdown
+  const { categories, loading: categoriesLoading } = useCategories(formData.language)
 
   // Load videos from Firestore
   const loadVideos = async () => {
@@ -391,13 +395,31 @@ export default function VideosManagement() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Categoria
                 </label>
-                <input
-                  type="text"
+                <select
                   value={formData.category}
                   onChange={(e) => setFormData({...formData, category: e.target.value})}
-                  placeholder="Educativo, Matemática, etc."
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-                />
+                >
+                  <option value="">Selecionar categoria...</option>
+                  {categoriesLoading ? (
+                    <option disabled>Carregando categorias...</option>
+                  ) : (
+                    categories.map((category) => (
+                      <option key={category.value} value={category.value}>
+                        {category.label}
+                      </option>
+                    ))
+                  )}
+                </select>
+                <div className="flex mt-2">
+                  <input
+                    type="text"
+                    placeholder="Ou criar nova categoria"
+                    value={formData.category}
+                    onChange={(e) => setFormData({...formData, category: e.target.value})}
+                    className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                  />
+                </div>
               </div>
 
               <div>
