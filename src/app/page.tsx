@@ -1,9 +1,18 @@
+'use client'
+
 import Layout from '@/components/Layout'
 import Hero from '@/components/Hero'
 import Card from '@/components/Card'
+import VideoGrid from '@/components/VideoGrid'
+import { useVideos } from '@/hooks/useVideos'
 import Image from 'next/image'
+import Link from 'next/link'
 
 export default function Home() {
+  // Buscar apenas os primeiros 3 vídeos para preview
+  const { videos, loading } = useVideos()
+  const previewVideos = videos.slice(0, 3)
+
   return (
     <Layout>
       {/* Hero Section */}
@@ -128,6 +137,33 @@ export default function Home() {
                 </p>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Seção de Preview de Vídeos */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold font-poppins text-gray-800 mb-4">
+              🎬 Últimos Vídeos do Dino
+            </h2>
+            <p className="text-xl text-gray-600 font-nunito max-w-3xl mx-auto mb-8">
+              Vê os vídeos mais recentes e divertidos! Cada vídeo é uma nova aventura de aprendizagem.
+            </p>
+          </div>
+          
+          {/* Video Preview Grid */}
+          <VideoGrid videos={previewVideos} loading={loading} />
+          
+          {/* Ver Todos os Vídeos */}
+          <div className="text-center mt-12">
+            <Link
+              href="/videos"
+              className="inline-block bg-gradient-to-r from-blue-500 to-purple-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg"
+            >
+              Ver Todos os Vídeos 🎥
+            </Link>
           </div>
         </div>
       </section>

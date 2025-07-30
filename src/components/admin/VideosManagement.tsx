@@ -3,41 +3,55 @@
 import { useState, useEffect } from 'react'
 import { db } from '@/lib/firebase'
 import { collection, getDocs, addDoc, deleteDoc, doc, updateDoc } from 'firebase/firestore'
+import { useAuthState } from 'react-firebase-hooks/auth'
+import { auth } from '@/lib/firebase'
 
 interface Video {
   id: string
   title: string
   description: string
   platform: 'youtube' | 'rumble'
-  embedId: string
+  videoId: string
   duration?: string
   category?: string
+  language?: 'pt' | 'en'
   featured?: boolean
-  published?: boolean
+  isActive?: boolean
   createdAt?: any
   updatedAt?: any
 }
 
 export default function VideosManagement() {
+  const [user, loading, error] = useAuthState(auth)
   const [videos, setVideos] = useState<Video[]>([])
   const [loadingVideos, setLoadingVideos] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingVideo, setEditingVideo] = useState<Video | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [successMessage, setSuccessMessage] = useState<string>('')
+  const [errorMessage, setErrorMessage] = useState<string>('')
   
   // Form state
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     platform: 'youtube' as 'youtube' | 'rumble',
-    embedId: '',
+    videoId: '',
     duration: '',
     category: '',
+    language: 'pt' as 'pt' | 'en',
     featured: false,
-    published: true
+    isActive: true
   })
 
   // Load videos from Firestore
   const loadVideos = async () => {
+    if (!user) {
+      console.log('User not authenticated, skipping video load')
+      setLoadingVideos(false)
+      return
+    }
+
     try {
       const videosCollection = collection(db, 'videos')
       const videoSnapshot = await getDocs(videosCollection)
@@ -49,14 +63,19 @@ export default function VideosManagement() {
       setVideos(videoList.sort((a, b) => b.createdAt?.seconds - a.createdAt?.seconds))
     } catch (error) {
       console.error('Error loading videos:', error)
+      setErrorMessage('❌ Erro ao carregar vídeos. Verifique suas permissões.')
     } finally {
       setLoadingVideos(false)
     }
   }
 
   useEffect(() => {
-    loadVideos()
-  }, [])
+    if (!loading && user) {
+      loadVideos()
+    } else if (!loading && !user) {
+      setLoadingVideos(false)
+    }
+  }, [user, loading])
 
   // Extract video ID from URL
   const extractVideoId = (url: string) => {
@@ -77,52 +96,120 @@ export default function VideosManagement() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    if (!user) {
+      setErrorMessage('❌ Utilizador não autenticado')
+      return
+    }
+    
+    // Clear previous messages
+    setSuccessMessage('')
+    setErrorMessage('')
+    setIsSubmitting(true)
+    
     try {
       const videoData = {
         ...formData,
-        embedId: extractVideoId(formData.embedId),
-        createdAt: new Date(),
+        videoId: extractVideoId(formData.videoId),
+        createdAt: editingVideo ? editingVideo.createdAt : new Date(),
         updatedAt: new Date()
       }
 
       if (editingVideo) {
         // Update existing video
-        await updateDoc(doc(db, 'videos', editingVideo.id), {
-          ...videoData,
-          createdAt: editingVideo.createdAt, // Keep original creation date
-        })
+        await updateDoc(doc(db, 'videos', editingVideo.id), videoData)
+        setSuccessMessage('✅ Vídeo atualizado com sucesso!')
       } else {
         // Add new video
         await addDoc(collection(db, 'videos'), videoData)
+        setSuccessMessage('🎉 Vídeo adicionado com sucesso!')
       }
       
       // Reset form and reload
-      setFormData({
-        title: '',
-        description: '',
-        platform: 'youtube',
-        embedId: '',
-        duration: '',
-        category: '',
-        featured: false,
-        published: true
-      })
-      setShowAddForm(false)
-      setEditingVideo(null)
-      loadVideos()
+      resetForm()
+      await loadVideos() // Refresh the videos list
+      
+      // Auto-hide success message after 3 seconds
+      setTimeout(() => {
+        setSuccessMessage('')
+      }, 3000)
+      
     } catch (error) {
       console.error('Error saving video:', error)
+      setErrorMessage('❌ Erro ao salvar vídeo. Tente novamente.')
+      
+      // Auto-hide error message after 5 seconds
+      setTimeout(() => {
+        setErrorMessage('')
+      }, 5000)
+    } finally {
+      setIsSubmitting(false)
     }
+  }
+
+  // Reset form function (closes form)
+  const resetForm = () => {
+    setFormData({
+      title: '',
+      description: '',
+      platform: 'youtube',
+      videoId: '',
+      duration: '',
+      category: '',
+      language: 'pt',
+      featured: false,
+      isActive: true
+    })
+    setShowAddForm(false)
+    setEditingVideo(null)
+    setSuccessMessage('')
+    setErrorMessage('')
+  }
+
+  // Reset only form data (keeps form open)
+  const resetFormData = () => {
+    setFormData({
+      title: '',
+      description: '',
+      platform: 'youtube',
+      videoId: '',
+      duration: '',
+      category: '',
+      language: 'pt',
+      featured: false,
+      isActive: true
+    })
   }
 
   // Delete video
   const handleDelete = async (videoId: string) => {
+    if (!user) {
+      setErrorMessage('❌ Utilizador não autenticado')
+      return
+    }
+
     if (confirm('Tem a certeza que quer eliminar este vídeo?')) {
       try {
+        setErrorMessage('')
+        setSuccessMessage('')
+        
         await deleteDoc(doc(db, 'videos', videoId))
-        loadVideos()
+        setSuccessMessage('🗑️ Vídeo eliminado com sucesso!')
+        
+        await loadVideos() // Refresh the videos list
+        
+        // Auto-hide success message after 3 seconds
+        setTimeout(() => {
+          setSuccessMessage('')
+        }, 3000)
+        
       } catch (error) {
         console.error('Error deleting video:', error)
+        setErrorMessage('❌ Erro ao eliminar vídeo. Tente novamente.')
+        
+        // Auto-hide error message after 5 seconds
+        setTimeout(() => {
+          setErrorMessage('')
+        }, 5000)
       }
     }
   }
@@ -134,13 +221,38 @@ export default function VideosManagement() {
       title: video.title,
       description: video.description,
       platform: video.platform,
-      embedId: video.embedId,
+      videoId: video.videoId,
       duration: video.duration || '',
       category: video.category || '',
+      language: video.language || 'pt',
       featured: video.featured || false,
-      published: video.published !== false
+      isActive: video.isActive !== false
     })
     setShowAddForm(true)
+  }
+
+  // Loading state while checking authentication
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+        <span className="ml-3 text-gray-600">A verificar autenticação...</span>
+      </div>
+    )
+  }
+
+  // Not authenticated
+  if (!user) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+        <div className="text-red-600 text-lg font-semibold mb-2">
+          ❌ Acesso Negado
+        </div>
+        <p className="text-red-700">
+          É necessário estar autenticado para aceder à gestão de vídeos.
+        </p>
+      </div>
+    )
   }
 
   return (
@@ -160,16 +272,9 @@ export default function VideosManagement() {
           onClick={() => {
             setShowAddForm(true)
             setEditingVideo(null)
-            setFormData({
-              title: '',
-              description: '',
-              platform: 'youtube',
-              embedId: '',
-              duration: '',
-              category: '',
-              featured: false,
-              published: true
-            })
+            setSuccessMessage('')
+            setErrorMessage('')
+            resetFormData()
           }}
           className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center"
         >
@@ -179,6 +284,25 @@ export default function VideosManagement() {
           Adicionar Vídeo
         </button>
       </div>
+
+      {/* Success/Error Messages */}
+      {successMessage && (
+        <div className="bg-green-100 border border-green-400 text-green-700 px-6 py-4 rounded-lg flex items-center animate-pulse">
+          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          {successMessage}
+        </div>
+      )}
+      
+      {errorMessage && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg flex items-center">
+          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          {errorMessage}
+        </div>
+      )}
 
       {/* Add/Edit Video Form */}
       {showAddForm && (
@@ -224,8 +348,8 @@ export default function VideosManagement() {
               </label>
               <input
                 type="text"
-                value={formData.embedId}
-                onChange={(e) => setFormData({...formData, embedId: e.target.value})}
+                value={formData.videoId}
+                onChange={(e) => setFormData({...formData, videoId: e.target.value})}
                 placeholder="https://youtu.be/ABC123 ou ABC123"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
                 required
@@ -249,7 +373,7 @@ export default function VideosManagement() {
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Duração
@@ -275,6 +399,21 @@ export default function VideosManagement() {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
                 />
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Idioma *
+                </label>
+                <select
+                  value={formData.language}
+                  onChange={(e) => setFormData({...formData, language: e.target.value as 'pt' | 'en'})}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                  required
+                >
+                  <option value="pt">🇵🇹 Português</option>
+                  <option value="en">🇬🇧 English</option>
+                </select>
+              </div>
             </div>
 
             <div className="flex items-center space-x-6">
@@ -291,11 +430,11 @@ export default function VideosManagement() {
               <label className="flex items-center">
                 <input
                   type="checkbox"
-                  checked={formData.published}
-                  onChange={(e) => setFormData({...formData, published: e.target.checked})}
+                  checked={formData.isActive}
+                  onChange={(e) => setFormData({...formData, isActive: e.target.checked})}
                   className="rounded border-gray-300 text-orange-600 focus:ring-orange-500 h-4 w-4"
                 />
-                <span className="ml-2 text-sm text-gray-700">Publicado</span>
+                <span className="ml-2 text-sm text-gray-700">Ativo</span>
               </label>
             </div>
 
@@ -303,18 +442,31 @@ export default function VideosManagement() {
               <button
                 type="button"
                 onClick={() => {
-                  setShowAddForm(false)
-                  setEditingVideo(null)
+                  resetForm()
+                  setSuccessMessage('')
+                  setErrorMessage('')
                 }}
-                className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium transition-colors"
+                disabled={isSubmitting}
+                className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium transition-colors disabled:opacity-50"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-lg font-medium transition-colors"
+                disabled={isSubmitting}
+                className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
               >
-                {editingVideo ? 'Atualizar' : 'Adicionar'}
+                {isSubmitting ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    {editingVideo ? 'A Atualizar...' : 'A Adicionar...'}
+                  </>
+                ) : (
+                  editingVideo ? 'Atualizar' : 'Adicionar'
+                )}
               </button>
             </div>
           </form>
@@ -364,9 +516,14 @@ export default function VideosManagement() {
                           ⭐ Destaque
                         </span>
                       )}
-                      {!video.published && (
+                      {!video.isActive && (
                         <span className="ml-2 inline-block px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">
-                          📝 Rascunho
+                          � Inativo
+                        </span>
+                      )}
+                      {video.language && (
+                        <span className="ml-2 inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                          {video.language === 'pt' ? '🇵🇹 PT' : '🇬🇧 EN'}
                         </span>
                       )}
                     </div>
@@ -380,7 +537,7 @@ export default function VideosManagement() {
                         <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-6 6H2" />
                         </svg>
-                        ID: {video.embedId}
+                        ID: {video.videoId}
                       </span>
                       {video.duration && (
                         <span className="flex items-center">

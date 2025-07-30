@@ -1,0 +1,30 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow authenticated users to read and write videos
+    match /videos/{document} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Allow authenticated users to read and write categories
+    match /categories/{document} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Allow authenticated users to read and write site settings
+    match /settings/{document} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Allow public read access for videos (for the main site)
+    // You might want this for the public-facing parts of your site
+    match /videos/{document} {
+      allow read: if true;
+    }
+    
+    // Deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

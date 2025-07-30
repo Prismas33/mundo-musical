@@ -1,23 +1,48 @@
-interface Video {
-  id: string
-  title: string
-  description: string
-  platform: 'youtube' | 'rumble'
-  embedId: string
-  thumbnail?: string
-  duration?: string
-  category?: string
-}
+'use client'
+
+import { Video } from '@/hooks/useVideos'
 
 interface VideoGridProps {
   videos: Video[]
   category?: string
+  loading?: boolean
 }
 
-export default function VideoGrid({ videos, category }: VideoGridProps) {
+export default function VideoGrid({ videos, category, loading }: VideoGridProps) {
   const filteredVideos = category 
     ? videos.filter(video => video.category === category)
     : videos
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {[...Array(6)].map((_, index) => (
+          <div key={index} className="bg-white rounded-2xl shadow-lg overflow-hidden animate-pulse">
+            <div className="aspect-video bg-gray-300"></div>
+            <div className="p-6">
+              <div className="h-4 bg-gray-300 rounded mb-2"></div>
+              <div className="h-6 bg-gray-300 rounded mb-2"></div>
+              <div className="h-4 bg-gray-300 rounded"></div>
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  if (filteredVideos.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-6xl mb-4">🎬</div>
+        <h3 className="text-xl font-bold text-gray-800 mb-2">
+          Nenhum vídeo encontrado
+        </h3>
+        <p className="text-gray-600">
+          {category ? `Não há vídeos na categoria "${category}"` : 'Ainda não há vídeos disponíveis'}
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -27,7 +52,7 @@ export default function VideoGrid({ videos, category }: VideoGridProps) {
           <div className="aspect-video">
             {video.platform === 'youtube' ? (
               <iframe
-                src={`https://www.youtube.com/embed/${video.embedId}?rel=0&modestbranding=0&showinfo=1&controls=1`}
+                src={`https://www.youtube.com/embed/${video.videoId}?rel=0&modestbranding=0&showinfo=1&controls=1`}
                 title={video.title}
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -36,7 +61,7 @@ export default function VideoGrid({ videos, category }: VideoGridProps) {
               ></iframe>
             ) : (
               <iframe
-                src={`https://rumble.com/embed/${video.embedId}/`}
+                src={`https://rumble.com/embed/${video.videoId}/`}
                 title={video.title}
                 frameBorder="0"
                 allowFullScreen
@@ -55,9 +80,6 @@ export default function VideoGrid({ videos, category }: VideoGridProps) {
               }`}>
                 {video.platform === 'youtube' ? 'YouTube' : 'Rumble'}
               </span>
-              {video.duration && (
-                <span className="text-sm text-gray-500">{video.duration}</span>
-              )}
             </div>
             
             <h3 className="text-lg font-bold font-poppins text-gray-800 mb-2">
@@ -81,61 +103,3 @@ export default function VideoGrid({ videos, category }: VideoGridProps) {
     </div>
   )
 }
-
-// Dados de exemplo dos vídeos (substituir pelos vídeos reais)
-export const sampleVideos: Video[] = [
-  {
-    id: '1',
-    title: 'Dino aprende as Cores 🌈',
-    description: 'Vem descobrir o mundo colorido com o Dino! Aprende todas as cores do arco-íris de forma divertida.',
-    platform: 'youtube',
-    embedId: 'dQw4w9WgXcQ', // Placeholder - substituir pelo ID real
-    duration: '3:45',
-    category: 'Educativo'
-  },
-  {
-    id: '2',
-    title: 'Canção dos Números com o Dino 🔢',
-    description: 'Conta comigo! O Dino ensina os números de 1 a 10 com uma música super divertida.',
-    platform: 'youtube',
-    embedId: 'dQw4w9WgXcQ', // Placeholder - substituir pelo ID real
-    duration: '4:12',
-    category: 'Matemática'
-  },
-  {
-    id: '3',
-    title: 'Alfabeto Musical 🎵',
-    description: 'Aprende todas as letras do alfabeto com o Dino! Uma música para cada letra.',
-    platform: 'rumble',
-    embedId: 'placeholder', // Placeholder - substituir pelo ID real
-    duration: '5:30',
-    category: 'Linguagem'
-  },
-  {
-    id: '4',
-    title: 'Dino e os Animais da Quinta 🐄',
-    description: 'Conhece todos os animais da quinta com o Dino! Vacas, porcos, galinhas e muito mais.',
-    platform: 'youtube',
-    embedId: 'dQw4w9WgXcQ', // Placeholder - substituir pelo ID real
-    duration: '3:20',
-    category: 'Animais'
-  },
-  {
-    id: '5',
-    title: 'Hora de Dormir com o Dino 🌙',
-    description: 'Uma canção de embalar suave para ajudar os pequenos a adormecer.',
-    platform: 'rumble',
-    embedId: 'placeholder', // Placeholder - substituir pelo ID real
-    duration: '6:00',
-    category: 'Relaxamento'
-  },
-  {
-    id: '6',
-    title: 'Dino e as Formas Geométricas ⭐',
-    description: 'Círculos, quadrados, triângulos! Aprende todas as formas com o Dino.',
-    platform: 'youtube',
-    embedId: 'dQw4w9WgXcQ', // Placeholder - substituir pelo ID real
-    duration: '4:05',
-    category: 'Matemática'
-  }
-]
