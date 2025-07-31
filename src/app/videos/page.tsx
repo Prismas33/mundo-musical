@@ -6,6 +6,65 @@ import VideoGrid from '@/components/VideoGrid'
 import { usePortugueseVideos } from '@/hooks/useVideos'
 import type { Metadata } from 'next'
 
+// Função para obter emoji da categoria
+const getCategoryEmoji = (categoryName: string): string => {
+  const emojiMap: { [key: string]: string } = {
+    'musical': '🎵',
+    'musica': '🎵',
+    'música': '🎵',
+    'musicais completos': '🎵',
+    'song': '🎵',
+    'music': '🎵',
+    'educacional': '📚',
+    'educational': '📚',
+    'ensino': '📚',
+    'aprender': '📚',
+    'learn': '📚',
+    'matematica': '🔢',
+    'matemática': '🔢',
+    'math': '🔢',
+    'divertida': '🎲',
+    'letras': '🔤',
+    'palavras': '🔤',
+    'letters': '🔤',
+    'historias': '📖',
+    'histórias': '📖',
+    'stories': '📖',
+    'curtas': '📖',
+    'geral': '🌟',
+    'general': '🌟',
+    'entretenimento': '🎬',
+    'entertainment': '🎬',
+    'diversão': '🎉',
+    'fun': '🎉',
+    'infantil': '👶',
+    'criança': '👶',
+    'child': '👶',
+    'kids': '👶',
+    'tutorial': '🎓',
+    'aventura': '🚀',
+    'adventure': '🚀',
+    'família': '👨‍👩‍👧‍👦',
+    'family': '👨‍👩‍👧‍👦',
+    'aprendizagem': '🧠',
+    'learning': '🧠',
+    'criatividade': '🎨',
+    'creativity': '🎨',
+    'arte': '🎨',
+    'art': '🎨',
+    'completo': '🎵',
+    'complete': '🎵'
+  }
+
+  const lowerName = categoryName.toLowerCase()
+  for (const [key, emoji] of Object.entries(emojiMap)) {
+    if (lowerName.includes(key)) {
+      return emoji
+    }
+  }
+  return '🏷️' // emoji padrão
+}
+
 // Metadata para SEO (não funciona em client components, mas deixamos para referência)
 // export const metadata: Metadata = {
 //   title: 'Vídeos do Dino - Mundo Musical',
@@ -125,7 +184,7 @@ export default function Videos() {
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                     >
-                      {category}
+                      {getCategoryEmoji(category)} {category}
                     </button>
                   ))}
                 </div>
