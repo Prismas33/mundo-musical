@@ -7,11 +7,52 @@ import VideoGrid from '@/components/VideoGrid'
 import { usePortugueseVideos } from '@/hooks/useVideos'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useEffect } from 'react'
 
 export default function Home() {
   // Buscar apenas os primeiros 3 vídeos para preview, filtrados por português
   const { videos, loading } = usePortugueseVideos()
   const previewVideos = videos.slice(0, 3)
+
+  // Carregar script do PayPal para doações
+  useEffect(() => {
+    const loadPayPalScript = () => {
+      // Verificar se o script já foi carregado
+      if (document.querySelector('script[src*="paypalobjects.com"]')) {
+        initializePayPalButton()
+        return
+      }
+
+      const script = document.createElement('script')
+      script.src = 'https://www.paypalobjects.com/donate/sdk/donate-sdk.js'
+      script.charset = 'UTF-8'
+      script.onload = () => {
+        initializePayPalButton()
+      }
+      document.head.appendChild(script)
+    }
+
+    const initializePayPalButton = () => {
+      if (typeof window !== 'undefined' && (window as any).PayPal) {
+        try {
+          (window as any).PayPal.Donation.Button({
+            env: 'production',
+            hosted_button_id: 'DUC3H4CXK8RAJ',
+            image: {
+              src: 'https://pics.paypal.com/00/s/ZTU2Njc2ZWMtZWU0NS00ODg1LWI5YzAtMjYwODQ4ZmQxZmJl/file.PNG',
+              alt: 'Donate with PayPal button',
+              title: 'PayPal - The safer, easier way to pay online!',
+            }
+          }).render('#donate-button')
+        } catch (error) {
+          console.log('Erro ao inicializar botão PayPal:', error)
+        }
+      }
+    }
+
+    // Delay para garantir que o DOM está pronto
+    setTimeout(loadPayPalScript, 500)
+  }, [])
 
   return (
     <Layout>
@@ -164,6 +205,55 @@ export default function Home() {
             >
               Ver Todos os Vídeos 🎥
             </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Seção de Apoio ao Projeto */}
+      <section className="bg-gradient-to-r from-green-100 via-yellow-100 to-orange-100 py-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="bg-white rounded-3xl p-8 shadow-2xl">
+            {/* Botão de Doação PayPal */}
+            <div className="flex justify-center mb-6">
+              <div id="donate-button-container" className="transform hover:scale-105 transition-transform duration-300">
+                <div id="donate-button"></div>
+              </div>
+            </div>
+            
+            <div className="mb-6">
+              <h2 className="text-3xl md:text-4xl font-bold font-poppins text-gray-800 mb-4">
+                💚 Ajude o Dino a Crescer!
+              </h2>
+              <p className="text-lg text-gray-600 font-nunito mb-6 max-w-2xl mx-auto">
+                O Dino precisa da sua ajuda para continuar criando conteúdo educativo e divertido! 
+                Cada contribuição nos ajuda a produzir mais vídeos, melhorar a qualidade e trazer novas aventuras para as crianças.
+              </p>
+              <div className="bg-yellow-50 rounded-2xl p-6 mb-6">
+                <h3 className="text-xl font-bold text-orange-600 mb-3">🎯 Com a sua doação, conseguimos:</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-green-600">✅</span>
+                    <span className="text-gray-700">Criar mais vídeos educativos</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-green-600">✅</span>
+                    <span className="text-gray-700">Melhorar a qualidade de produção</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-green-600">✅</span>
+                    <span className="text-gray-700">Desenvolver novos conteúdos</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-green-600">✅</span>
+                    <span className="text-gray-700">Manter a plataforma gratuita</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <p className="text-sm text-gray-500 mt-4">
+              🔒 Doação segura através do PayPal para Prismas33 proprietária do DinoWorld• Qualquer valor é bem-vindo!
+            </p>
           </div>
         </div>
       </section>
