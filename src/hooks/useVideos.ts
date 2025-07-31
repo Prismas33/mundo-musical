@@ -8,7 +8,7 @@ export interface Video {
   id: string
   title: string
   description: string
-  platform: 'youtube' | 'rumble'
+  platform: 'youtube'
   videoId: string
   category?: string
   language?: 'pt' | 'en'
@@ -52,23 +52,26 @@ export function useVideos(category?: string, language?: 'pt' | 'en') {
 
       querySnapshot.forEach((doc) => {
         const data = doc.data()
-        videosData.push({
-          id: doc.id,
-          title: data.title,
-          description: data.description,
-          platform: data.platform,
-          videoId: data.videoId,
-          category: data.category,
-          language: data.language,
-          duration: data.duration,
-          featured: data.featured,
-          createdAt: data.createdAt,
-          isActive: data.isActive
-        })
+        // Filtrar apenas vídeos do YouTube
+        if (data.platform === 'youtube') {
+          videosData.push({
+            id: doc.id,
+            title: data.title,
+            description: data.description,
+            platform: data.platform,
+            videoId: data.videoId,
+            category: data.category,
+            language: data.language,
+            duration: data.duration,
+            featured: data.featured,
+            createdAt: data.createdAt,
+            isActive: data.isActive
+          })
+        }
       })
 
-      // Debug: Log para verificar filtro de idioma
-      console.log(`📹 Vídeos carregados (${language || 'pt'}):`, videosData.length)
+      // Debug: Log para verificar filtro de idioma e plataforma
+      console.log(`📹 Vídeos do YouTube carregados (${language || 'pt'}):`, videosData.length)
       
       setVideos(videosData)
     } catch (err) {

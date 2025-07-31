@@ -56,10 +56,6 @@ export default function Help() {
               <strong>YouTube:</strong>
               <p>Cole o link: https://youtu.be/ABC123</p>
             </div>
-            <div>
-              <strong>Rumble:</strong>
-              <p>Cole o link: https://rumble.com/video-id</p>
-            </div>
             <div className="mt-3 p-3 bg-green-50 rounded-lg">
               <p className="text-green-800 text-xs">
                 ✅ A monetização é 100% preservada com embeds oficiais

@@ -15,7 +15,6 @@ import type { Metadata } from 'next'
 export default function Videos() {
   const { videos, loading } = usePortugueseVideos() // Vídeos em português apenas
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
-  const [platformFilter, setPlatformFilter] = useState<'youtube' | 'rumble'>('youtube') // YouTube por padrão
   const [searchTerm, setSearchTerm] = useState('')
 
   // Filtrar vídeos ativos apenas (já filtrados por idioma PT no hook)
@@ -42,10 +41,7 @@ export default function Videos() {
       (categoryFilter === 'featured' && video.featured) ||
       (categoryFilter === video.category)
 
-    // Filtro por plataforma
-    const matchesPlatform = video.platform === platformFilter
-
-    return matchesSearch && matchesCategory && matchesPlatform
+    return matchesSearch && matchesCategory
   })
 
   // Ordenar por: featured primeiro, depois por data
@@ -137,33 +133,6 @@ export default function Videos() {
                 </div>
               </div>
 
-              {/* Filtros por Plataforma */}
-              <div className="flex flex-col gap-3">
-                <h3 className="text-sm font-semibold text-gray-700">Plataforma:</h3>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    onClick={() => setPlatformFilter('youtube')}
-                    className={`px-4 py-2 rounded-xl font-medium transition-colors ${
-                      platformFilter === 'youtube'
-                        ? 'bg-red-500 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    📺 YouTube
-                  </button>
-                  <button
-                    onClick={() => setPlatformFilter('rumble')}
-                    className={`px-4 py-2 rounded-xl font-medium transition-colors ${
-                      platformFilter === 'rumble'
-                        ? 'bg-green-500 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    🎯 Rumble
-                  </button>
-                </div>
-              </div>
-
               {/* Resultados */}
               <div className="text-sm text-gray-600 font-nunito border-t pt-3 flex items-center justify-between">
                 <span>
@@ -180,7 +149,6 @@ export default function Videos() {
                     onClick={() => {
                       setSearchTerm('')
                       setCategoryFilter('all')
-                      setPlatformFilter('youtube') // Voltar ao padrão YouTube
                     }}
                     className="text-xs bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded-lg transition-colors"
                   >
@@ -199,12 +167,12 @@ export default function Videos() {
                   ⭐ Vídeos em Destaque
                 </h2>
                 <p className="text-lg text-gray-600 font-nunito">
-                  Os vídeos favoritos do Dino na plataforma {platformFilter === 'youtube' ? 'YouTube' : 'Rumble'}!
+                  Os vídeos favoritos do Dino no YouTube!
                 </p>
               </div>
               
               <VideoGrid 
-                videos={activeVideos.filter(v => v.featured && v.platform === platformFilter).slice(0, 3)} 
+                videos={activeVideos.filter(v => v.featured).slice(0, 3)} 
                 loading={loading}
               />
             </div>
@@ -216,10 +184,10 @@ export default function Videos() {
             {!searchTerm && categoryFilter === 'all' && (
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold font-poppins text-gray-800 mb-2">
-                  📺 Todos os Vídeos {platformFilter === 'youtube' ? 'YouTube' : 'Rumble'}
+                  📺 Todos os Vídeos do YouTube
                 </h2>
                 <p className="text-lg text-gray-600 font-nunito">
-                  Navega por toda a coleção na plataforma {platformFilter === 'youtube' ? 'YouTube' : 'Rumble'}!
+                  Navega por toda a coleção do YouTube!
                 </p>
               </div>
             )}
@@ -246,7 +214,7 @@ export default function Videos() {
                   </p>
                 )}
                 <p className="text-sm text-gray-500">
-                  Plataforma: {platformFilter === 'youtube' ? 'YouTube' : 'Rumble'}
+                  Plataforma: YouTube
                 </p>
               </div>
             )}

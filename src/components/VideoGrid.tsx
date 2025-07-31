@@ -8,7 +8,7 @@ interface VideoGridProps {
   loading?: boolean
 }
 
-// Função para limpar videoId se ele contém URL completo
+// Função para limpar videoId do YouTube
 const cleanVideoId = (videoId: string) => {
   if (!videoId) return ''
   
@@ -23,14 +23,15 @@ const cleanVideoId = (videoId: string) => {
     return videoId.split('youtu.be/')[1]?.split('?')[0] || videoId
   }
   
-  // Se não encontrar padrões conhecidos, retornar como está
   return videoId
 }
 
 export default function VideoGrid({ videos, category, loading }: VideoGridProps) {
+  // Filtrar apenas vídeos do YouTube
+  const youtubeVideos = videos.filter(video => video.platform === 'youtube')
   const filteredVideos = category 
-    ? videos.filter(video => video.category === category)
-    : videos
+    ? youtubeVideos.filter(video => video.category === category)
+    : youtubeVideos
 
   if (loading) {
     return (
@@ -66,53 +67,37 @@ export default function VideoGrid({ videos, category, loading }: VideoGridProps)
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
       {filteredVideos.map((video) => {
-        // Limpar o videoId se necessário
-        const cleanedVideoId = cleanVideoId(video.videoId)
+        // Limpar videoId para YouTube
+        let cleanedVideoId = cleanVideoId(video.videoId)
         
-        // Debug: Log video info para verificar se os IDs estão corretos
-        console.log('Video debug:', {
+        console.log('🎬 Video debug:', {
           id: video.id,
           title: video.title,
-          videoId: video.videoId,
+          originalVideoId: video.videoId,
           cleanedVideoId,
-          platform: video.platform,
-          embedUrl: `https://www.youtube.com/embed/${cleanedVideoId}`
+          platform: video.platform
         })
         
         return (
-        <div key={video.id} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-          {/* Video Embed */}
-          <div className="aspect-video">
-            {video.platform === 'youtube' ? (
-              <iframe
-                // Usando parâmetros básicos que funcionam tanto para vídeos normais quanto Shorts
-                src={`https://www.youtube.com/embed/${cleanedVideoId}?enablejsapi=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`}
-                title={video.title}
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-                className="w-full h-full"
-              ></iframe>
-            ) : (
-              <iframe
-                src={`https://rumble.com/embed/${video.videoId}/`}
-                title={video.title}
-                frameBorder="0"
-                allowFullScreen
-                className="w-full h-full"
-              ></iframe>
-            )}
+          <div key={video.id} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+            {/* Video Embed - Apenas YouTube */}
+            <div className="aspect-video">
+            <iframe
+              // Usando parâmetros básicos que funcionam tanto para vídeos normais quanto Shorts
+              src={`https://www.youtube.com/embed/${cleanedVideoId}?enablejsapi=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`}
+              title={video.title}
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+              className="w-full h-full"
+            ></iframe>
           </div>
           
           {/* Video Info */}
           <div className="p-6">
             <div className="flex items-center justify-between mb-3">
-              <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                video.platform === 'youtube' 
-                  ? 'bg-red-100 text-red-800' 
-                  : 'bg-green-100 text-green-800'
-              }`}>
-                {video.platform === 'youtube' ? '📺 YouTube' : '🎯 Rumble'}
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                📺 YouTube
               </span>
               
               {video.featured && (

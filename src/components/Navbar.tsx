@@ -18,7 +18,6 @@ export default function Navbar() {
                 alt="Mundo Musical"
                 width={40}
                 height={40}
-                style={{ width: 'auto', height: '40px' }}
                 className="mr-3"
               />
               <span className="text-2xl font-bold font-poppins text-orange-500">

@@ -11,7 +11,7 @@ interface Video {
   id: string
   title: string
   description: string
-  platform: 'youtube' | 'rumble'
+  platform: 'youtube'
   videoId: string
   duration?: string
   category?: string
@@ -32,12 +32,15 @@ export default function VideosManagement() {
   const [successMessage, setSuccessMessage] = useState<string>('')
   const [errorMessage, setErrorMessage] = useState<string>('')
   const [languageFilter, setLanguageFilter] = useState<'pt' | 'en'>('pt') // Filtro de idioma
+  const [currentPage, setCurrentPage] = useState(1)
+  const [searchTerm, setSearchTerm] = useState('')
+  const videosPerPage = 10
   
   // Form state
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    platform: 'youtube' as 'youtube' | 'rumble',
+    platform: 'youtube' as 'youtube',
     videoId: '',
     duration: '',
     category: '',
@@ -49,8 +52,26 @@ export default function VideosManagement() {
   // Load categories for dropdown
   const { categories, loading: categoriesLoading } = useCategories(formData.language)
 
-  // Filtrar vídeos por idioma
-  const filteredVideos = videos.filter(video => video.language === languageFilter)
+  // Filtrar vídeos por idioma e termo de pesquisa
+  const filteredVideos = videos.filter(video => {
+    const languageMatch = video.language === languageFilter
+    const searchMatch = searchTerm === '' || 
+      video.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      video.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (video.category && video.category.toLowerCase().includes(searchTerm.toLowerCase()))
+    return languageMatch && searchMatch
+  })
+
+  // Calcular paginação
+  const totalPages = Math.ceil(filteredVideos.length / videosPerPage)
+  const startIndex = (currentPage - 1) * videosPerPage
+  const endIndex = startIndex + videosPerPage
+  const paginatedVideos = filteredVideos.slice(startIndex, endIndex)
+
+  // Reset página quando filtros mudam
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [languageFilter, searchTerm])
 
   // Load videos from Firestore
   const loadVideos = async () => {
@@ -100,16 +121,6 @@ export default function VideosManagement() {
     // YouTube Shorts
     if (cleanUrl.includes('youtube.com/shorts/')) {
       return cleanUrl.split('youtube.com/shorts/')[1]?.split('?')[0]
-    }
-    // Rumble
-    if (cleanUrl.includes('rumble.com/')) {
-      const parts = cleanUrl.split('/')
-      // Para URLs como https://rumble.com/v123abc-titulo.html
-      const lastPart = parts[parts.length - 1]
-      if (lastPart.includes('-')) {
-        return lastPart.split('-')[0]
-      }
-      return lastPart?.split('.')[0] // Remove .html se existir
     }
     
     // Se não conseguir extrair, retornar a URL original (fallback)
@@ -289,11 +300,11 @@ export default function VideosManagement() {
             Gestão de Vídeos
           </h1>
           <p className="text-gray-600 font-nunito">
-            Adicionar, editar e organizar vídeos do YouTube e Rumble
+            Adicionar, editar e organizar vídeos do YouTube
           </p>
         </div>
         
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           {/* Filtro de Idioma */}
           <div className="flex items-center bg-gray-100 rounded-lg p-1">
             <button
@@ -384,11 +395,10 @@ export default function VideosManagement() {
                 </label>
                 <select
                   value={formData.platform}
-                  onChange={(e) => setFormData({...formData, platform: e.target.value as 'youtube' | 'rumble'})}
+                  onChange={(e) => setFormData({...formData, platform: e.target.value as 'youtube'})}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
                 >
                   <option value="youtube">YouTube</option>
-                  <option value="rumble">Rumble</option>
                 </select>
               </div>
             </div>
@@ -555,6 +565,34 @@ export default function VideosManagement() {
               </span>
             )}
           </div>
+          
+          {/* Barra de Pesquisa */}
+          <div className="mt-4">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                placeholder="Pesquisar por título, descrição ou categoria..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                >
+                  <svg className="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          </div>
         </div>
         
         {loadingVideos ? (
@@ -577,81 +615,81 @@ export default function VideosManagement() {
           </div>
         ) : (
           <div className="divide-y divide-gray-200">
-            {filteredVideos.map((video) => (
-              <div key={video.id} className="p-6 hover:bg-gray-50 transition-colors">
+            {paginatedVideos.map((video) => (
+              <div key={video.id} className="p-3 hover:bg-gray-50 transition-colors">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center mb-3">
-                      <h3 className="text-lg font-semibold text-gray-900 mr-3">
+                    <div className="flex items-center mb-2">
+                      <h3 className="text-base font-semibold text-gray-900 mr-3">
                         {video.title}
                       </h3>
-                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+                      <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
                         video.platform === 'youtube' 
                           ? 'bg-red-100 text-red-800' 
                           : 'bg-green-100 text-green-800'
                       }`}>
-                        {video.platform === 'youtube' ? 'YouTube' : 'Rumble'}
+                        {video.platform === 'youtube' ? '📺 YT' : '🎬 Rumble'}
                       </span>
                       {video.featured && (
-                        <span className="ml-2 inline-block px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
+                        <span className="ml-2 inline-block px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
                           ⭐ Destaque
                         </span>
                       )}
                       {!video.isActive && (
-                        <span className="ml-2 inline-block px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">
-                          � Inativo
+                        <span className="ml-2 inline-block px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">
+                          ❌ Inativo
                         </span>
                       )}
                       {video.language && (
-                        <span className="ml-2 inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                        <span className="ml-2 inline-block px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
                           {video.language === 'pt' ? '🇵🇹 PT' : '🇬🇧 EN'}
                         </span>
                       )}
                     </div>
                     
-                    <div className="flex items-center text-xs text-gray-500 space-x-4 mt-3">
+                    <div className="flex items-center text-xs text-gray-500 space-x-3 mt-1">
                       <span className="flex items-center">
-                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-6 6H2" />
-                        </svg>
-                        ID: {video.videoId}
+                        🆔 {video.videoId || 'Sem ID'}
                       </span>
                       {video.duration && (
                         <span className="flex items-center">
-                          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          {video.duration}
+                          ⏱️ {video.duration}
                         </span>
                       )}
                       {video.category && (
                         <span className="flex items-center">
-                          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                          </svg>
-                          {video.category}
+                          🏷️ {video.category}
                         </span>
                       )}
+                      <span className={`flex items-center ${video.isActive ? 'text-green-600' : 'text-red-600'}`}>
+                        {video.isActive ? '✅ Ativo' : '❌ Inativo'}
+                      </span>
                     </div>
+                    
+                    {video.description && (
+                      <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+                        {video.description}
+                      </p>
+                    )}
                   </div>
                   
-                  <div className="flex items-center space-x-2 ml-6">
+                  <div className="flex items-center space-x-1 ml-4">
                     <button
                       onClick={() => handleEdit(video)}
-                      className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
+                      className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
                       title="Editar"
                     >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                       </svg>
                     </button>
                     
                     <button
                       onClick={() => handleDelete(video.id)}
-                      className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
+                      className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
                       title="Eliminar"
                     >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
                     </button>
@@ -659,6 +697,76 @@ export default function VideosManagement() {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+        
+        {/* Paginação */}
+        {filteredVideos.length > videosPerPage && (
+          <div className="mt-6 flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
+            <div className="flex flex-1 justify-between sm:hidden">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Anterior
+              </button>
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Próximo
+              </button>
+            </div>
+            <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm text-gray-700">
+                  Mostrando <span className="font-medium">{startIndex + 1}</span> a{' '}
+                  <span className="font-medium">{Math.min(endIndex, filteredVideos.length)}</span> de{' '}
+                  <span className="font-medium">{filteredVideos.length}</span> vídeos
+                </p>
+              </div>
+              <div>
+                <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <span className="sr-only">Anterior</span>
+                    <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                  
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
+                        page === currentPage
+                          ? 'z-10 bg-blue-600 text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600'
+                          : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <span className="sr-only">Próximo</span>
+                    <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </nav>
+              </div>
+            </div>
           </div>
         )}
       </div>

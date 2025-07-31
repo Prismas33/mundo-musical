@@ -8,7 +8,7 @@ interface Video {
   id: string
   title: string
   description: string
-  platform: 'youtube' | 'rumble'
+  platform: 'youtube'
   videoId: string
   category?: string
   language?: 'pt' | 'en'
@@ -23,7 +23,6 @@ interface AnalyticsData {
   activeVideos: number
   totalCategories: number
   youtubVideos: number
-  rumbleVideos: number
   featuredVideos: number
   recentActivity: Array<{
     type: string
@@ -38,7 +37,6 @@ export default function Analytics() {
     activeVideos: 0,
     totalCategories: 0,
     youtubVideos: 0,
-    rumbleVideos: 0,
     featuredVideos: 0,
     recentActivity: []
   })
@@ -65,7 +63,6 @@ export default function Analytics() {
       const totalVideos = videos.length
       const activeVideos = videos.filter(v => v.isActive !== false).length
       const youtubVideos = videos.filter(v => v.platform === 'youtube').length
-      const rumbleVideos = videos.filter(v => v.platform === 'rumble').length
       const featuredVideos = videos.filter(v => v.featured === true).length
       
       // Contar categorias únicas
@@ -87,7 +84,6 @@ export default function Analytics() {
         activeVideos,
         totalCategories,
         youtubVideos,
-        rumbleVideos,
         featuredVideos,
         recentActivity
       })
@@ -189,22 +185,6 @@ export default function Analytics() {
                 <p className="text-xs text-gray-500">
                   {analyticsData.totalVideos > 0 ? 
                     Math.round((analyticsData.youtubVideos / analyticsData.totalVideos) * 100) : 0}%
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
-                  <span className="text-green-600 text-sm">🎬</span>
-                </div>
-                <span className="font-medium">Rumble</span>
-              </div>
-              <div className="text-right">
-                <span className="text-xl font-bold text-gray-900">{analyticsData.rumbleVideos}</span>
-                <p className="text-xs text-gray-500">
-                  {analyticsData.totalVideos > 0 ? 
-                    Math.round((analyticsData.rumbleVideos / analyticsData.totalVideos) * 100) : 0}%
                 </p>
               </div>
             </div>

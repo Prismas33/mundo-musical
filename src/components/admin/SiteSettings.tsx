@@ -12,7 +12,6 @@ interface SiteSettings {
   contactEmail: string
   socialLinks: {
     youtube: string
-    rumble: string
     instagram: string
     facebook: string
   }
@@ -32,7 +31,6 @@ export default function SiteSettings() {
     contactEmail: 'contato@mundomusical.com',
     socialLinks: {
       youtube: '',
-      rumble: '',
       instagram: '',
       facebook: ''
     },
@@ -331,19 +329,6 @@ export default function SiteSettings() {
                   onChange={(e) => handleNestedInputChange('socialLinks', 'youtube', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   placeholder="https://youtube.com/@seuscanal"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  🎬 Canal Rumble
-                </label>
-                <input
-                  type="url"
-                  value={settings.socialLinks.rumble}
-                  onChange={(e) => handleNestedInputChange('socialLinks', 'rumble', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  placeholder="https://rumble.com/user/seuscanal"
                 />
               </div>
 
