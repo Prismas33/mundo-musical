@@ -8,6 +8,7 @@ interface VideoGridProps {
   videos: Video[]
   category?: string
   loading?: boolean
+  featured?: boolean // Nova prop para indicar se são vídeos em destaque
 }
 
 // Função para limpar videoId do YouTube
@@ -28,7 +29,7 @@ const cleanVideoId = (videoId: string) => {
   return videoId
 }
 
-export default function VideoGrid({ videos, category, loading }: VideoGridProps) {
+export default function VideoGrid({ videos, category, loading, featured }: VideoGridProps) {
   const { initializePlayer, isApiReady, cleanup } = useYouTubePlayer()
 
   // Filtrar apenas vídeos do YouTube
@@ -87,14 +88,20 @@ export default function VideoGrid({ videos, category, loading }: VideoGridProps)
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {[...Array(6)].map((_, index) => (
-          <div key={index} className="bg-white rounded-2xl shadow-lg overflow-hidden animate-pulse">
-            <div className="aspect-video bg-gray-300"></div>
-            <div className="p-6">
+      <div className={
+        featured 
+          ? "flex flex-wrap justify-center gap-8 max-w-6xl mx-auto" 
+          : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+      }>
+        {[...Array(featured ? 3 : 6)].map((_, index) => (
+          <div key={index} className={`bg-white rounded-2xl shadow-lg overflow-hidden animate-pulse ${
+            featured ? 'w-[500px] flex-shrink-0' : ''
+          }`}>
+            <div className={`bg-gray-300 ${featured ? "aspect-[16/9]" : "aspect-video"}`}></div>
+            <div className={featured ? "p-3" : "p-6"}>
               <div className="h-4 bg-gray-300 rounded mb-2"></div>
               <div className="h-6 bg-gray-300 rounded mb-2"></div>
-              <div className="h-4 bg-gray-300 rounded"></div>
+              {!featured && <div className="h-4 bg-gray-300 rounded"></div>}
             </div>
           </div>
         ))}
@@ -117,16 +124,22 @@ export default function VideoGrid({ videos, category, loading }: VideoGridProps)
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    <div className={
+      featured 
+        ? "flex flex-wrap justify-center gap-8 max-w-6xl mx-auto" 
+        : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+    }>
       {filteredVideos.map((video) => {
         // Limpar videoId para YouTube
         const cleanedVideoId = cleanVideoId(video.videoId)
         const playerId = `youtube-player-${video.id}`
         
         return (
-          <div key={video.id} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+          <div key={video.id} className={`bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:scale-105 ${
+            featured ? 'w-[500px] flex-shrink-0' : ''
+          }`}>
             {/* Video Embed - YouTube Player API com fallback para iframe */}
-            <div className="aspect-video">
+            <div className={featured ? "aspect-[16/9]" : "aspect-video"}>
               {isApiReady ? (
                 <div 
                   id={playerId}
@@ -145,45 +158,65 @@ export default function VideoGrid({ videos, category, loading }: VideoGridProps)
             </div>
           
             {/* Video Info */}
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-3">
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
-                  📺 YouTube
-                </span>
-                
-                {video.featured && (
-                  <span className="inline-flex items-center px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full font-medium">
-                    ⭐ Destaque
+            <div className={featured ? "p-3" : "p-6"}>
+              {!featured && (
+                <div className="flex items-center justify-between mb-3">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                    📺 YouTube
                   </span>
-                )}
-              </div>
+                  
+                  {video.featured && (
+                    <span className="inline-flex items-center px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full font-medium">
+                      ⭐ Destaque
+                    </span>
+                  )}
+                </div>
+              )}
               
-              <h3 className="text-lg font-bold font-poppins text-gray-800 mb-2 line-clamp-2">
+              <h3 className={`font-bold font-poppins mb-2 line-clamp-2 ${
+                featured 
+                  ? 'text-lg text-gray-800 text-center' 
+                  : 'text-lg text-gray-800'
+              }`}>
                 {video.title}
               </h3>
               
-              <p className="text-gray-600 font-nunito text-sm line-clamp-3 mb-3">
-                {video.description}
-              </p>
+              {/* Remover descrição apenas para vídeos em destaque */}
+              {!featured && (
+                <p className="text-gray-600 font-nunito text-sm line-clamp-3 mb-3">
+                  {video.description}
+                </p>
+              )}
               
               {/* Tags de Categoria e Data */}
-              <div className="flex items-center justify-between">
-                {video.category && (
-                  <span className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 text-sm rounded-full font-medium">
+              {!featured && (
+                <div className="flex items-center justify-between">
+                  {video.category && (
+                    <span className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 text-sm rounded-full font-medium">
+                      🏷️ {video.category}
+                    </span>
+                  )}
+                  
+                  {video.createdAt && (
+                    <span className="text-xs text-gray-500">
+                      {new Date(video.createdAt.seconds * 1000).toLocaleDateString('pt-PT', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                      })}
+                    </span>
+                  )}
+                </div>
+              )}
+              
+              {/* Para vídeos em destaque, mostrar apenas categoria centrada e compacta */}
+              {featured && video.category && (
+                <div className="text-center">
+                  <span className="inline-flex items-center px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full font-medium">
                     🏷️ {video.category}
                   </span>
-                )}
-                
-                {video.createdAt && (
-                  <span className="text-xs text-gray-500">
-                    {new Date(video.createdAt.seconds * 1000).toLocaleDateString('pt-PT', {
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: 'numeric'
-                    })}
-                  </span>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         )

@@ -44,10 +44,8 @@ export default function Videos() {
     return matchesSearch && matchesCategory
   })
 
-  // Ordenar por: featured primeiro, depois por data
+  // Ordenar apenas por data (sem priorizar featured)
   const sortedVideos = filteredVideos.sort((a, b) => {
-    if (a.featured && !b.featured) return -1
-    if (!a.featured && b.featured) return 1
     return (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)
   })
 
@@ -171,10 +169,16 @@ export default function Videos() {
                 </p>
               </div>
               
-              <VideoGrid 
-                videos={activeVideos.filter(v => v.featured).slice(0, 3)} 
-                loading={loading}
-              />
+              {/* Container centralizado para vídeos em destaque */}
+              <div className="flex justify-center">
+                <div className="max-w-7xl w-full">
+                  <VideoGrid 
+                    videos={activeVideos.filter(v => v.featured)} 
+                    loading={loading}
+                    featured={true}
+                  />
+                </div>
+              </div>
             </div>
           )}
 
