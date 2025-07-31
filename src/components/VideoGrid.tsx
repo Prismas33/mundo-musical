@@ -29,6 +29,65 @@ const cleanVideoId = (videoId: string) => {
   return videoId
 }
 
+// Função para obter emoji da categoria
+const getCategoryEmoji = (categoryName: string): string => {
+  const emojiMap: { [key: string]: string } = {
+    'musical': '🎵',
+    'musica': '🎵',
+    'música': '🎵',
+    'musicais completos': '🎵',
+    'song': '🎵',
+    'music': '🎵',
+    'educacional': '📚',
+    'educational': '📚',
+    'ensino': '📚',
+    'aprender': '📚',
+    'learn': '📚',
+    'matematica': '🔢',
+    'matemática': '🔢',
+    'math': '🔢',
+    'divertida': '🎲',
+    'letras': '🔤',
+    'palavras': '🔤',
+    'letters': '🔤',
+    'historias': '📖',
+    'histórias': '📖',
+    'stories': '📖',
+    'curtas': '📖',
+    'geral': '🌟',
+    'general': '🌟',
+    'entretenimento': '🎬',
+    'entertainment': '🎬',
+    'diversão': '🎉',
+    'fun': '🎉',
+    'infantil': '👶',
+    'criança': '👶',
+    'child': '👶',
+    'kids': '👶',
+    'tutorial': '🎓',
+    'aventura': '🚀',
+    'adventure': '🚀',
+    'família': '👨‍👩‍👧‍👦',
+    'family': '👨‍👩‍👧‍👦',
+    'aprendizagem': '🧠',
+    'learning': '🧠',
+    'criatividade': '🎨',
+    'creativity': '🎨',
+    'arte': '🎨',
+    'art': '🎨',
+    'completo': '🎵',
+    'complete': '🎵'
+  }
+
+  const lowerName = categoryName.toLowerCase()
+  for (const [key, emoji] of Object.entries(emojiMap)) {
+    if (lowerName.includes(key)) {
+      return emoji
+    }
+  }
+  return '🏷️' // emoji padrão
+}
+
 export default function VideoGrid({ videos, category, loading, featured }: VideoGridProps) {
   const { initializePlayer, isApiReady, cleanup } = useYouTubePlayer()
 
@@ -193,7 +252,7 @@ export default function VideoGrid({ videos, category, loading, featured }: Video
                 <div className="flex items-center justify-between">
                   {video.category && (
                     <span className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 text-sm rounded-full font-medium">
-                      🏷️ {video.category}
+                      {getCategoryEmoji(video.category)} {video.category}
                     </span>
                   )}
                   
@@ -213,7 +272,7 @@ export default function VideoGrid({ videos, category, loading, featured }: Video
               {featured && video.category && (
                 <div className="text-center">
                   <span className="inline-flex items-center px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full font-medium">
-                    🏷️ {video.category}
+                    {getCategoryEmoji(video.category)} {video.category}
                   </span>
                 </div>
               )}
